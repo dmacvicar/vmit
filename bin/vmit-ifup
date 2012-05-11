@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+$: << File.join(File.dirname(__FILE__), "..", "lib")
+
+#/sbin/brctl setfd ${switch} 0
+#/sbin/brctl stp ${switch} off
+
+require 'rubygems'
+require 'vmit'
+require 'drb'
+
+DRb.start_service
+logger = DRbObject.new nil, ENV['VMIT_LOGSERVER']
+SWITCH = ENV['VMIT_SWITCH']
+
+logger.info "  Bringing interface #{ARGV[0]} up"
+Vmit::Utils.run_command(*['/sbin/ifconfig', ARGV[0], '0.0.0.0', 'up'])
+logger.info "    Connecting #{ARGV[0]} --> #{SWITCH}"
+Vmit::Utils.run_command(*['ovs-vsctl', 'add-port', SWITCH, ARGV[0]])
+
+
+

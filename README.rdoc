@@ -1,0 +1,74 @@
+
+= Vmit
+
+== Introduction
+
+Vmit is a simple tool to manage virtual kvm machines for development/testing.
+
+I wrote in desperation for after having various directories with images, scripts to
+launch qemu, network setup scripts, etc.
+
+== Philosophy
+
+* Inspired in git: the directory where you are gives the context of the virtual machine
+you are working with.
+* No XML  (virsh)
+* Good defaults: the default configuration is no configuration
+* Changing the mac address, RAM size and other parameters should be posible when launching
+  the VM (one time value) or persistent (per VM workspace)
+* Easy creation of a snapshot to test something. Easy rollback.
+
+== Usage
+
+Just create a directory for your VM:
+
+    mkdir myvm
+    cd myvm
+
+You don't need any configuration, but without a disk image:
+
+    $ vmit run 
+    I, [2012-03-14T16:40:07.368677 #19781]  INFO -- : Starting VM...
+    I, [2012-03-14T16:40:07.368774 #19781]  INFO -- :   => memory : 1G
+    I, [2012-03-14T16:40:07.368840 #19781]  INFO -- :   => mac_address : 0e:86:d7:76:94:89
+    F, [2012-03-14T16:40:07.369028 #19781] FATAL -- : No hard disk image available
+
+So try init first. You can specify disk size or memory as parameter. Any option which is
+not a default wil be written into a config.yml file:
+
+    $ vmit init 
+    I, [2012-03-14T16:45:23.477649 #20129]  INFO -- : Writing config.yml...
+    I, [2012-03-14T16:45:23.607814 #20129]  INFO -- : Formatting '/space/vm/minix3/sda-1331739923.qcow2', fmt=qcow2 size=10737418240 encryption=off cluster_size=65536 
+
+The just launch the vm. You can pass a cdrom with --cdrom
+
+    $ vmit run --cdrom minix_R3.2.0-116fcea.iso
+    I, [2012-03-14T16:46:59.130827 #20189]  INFO -- : Starting VM...
+    I, [2012-03-14T16:46:59.130929 #20189]  INFO -- :   => memory : 1G
+    I, [2012-03-14T16:46:59.130996 #20189]  INFO -- :   => cdrom : minix_R3.2.0-116fcea.iso
+    I, [2012-03-14T16:46:59.131024 #20189]  INFO -- :   => mac_address : 2a:eb:6c:6d:77:86
+    I, [2012-03-14T16:46:59.241318 #20189]  INFO -- :   Bringing interface tap1 up
+    I, [2012-03-14T16:46:59.244394 #20189]  INFO -- :     Connecting tap1 --> br0
+
+You don't care about network setup. If you don't say anything vmit will connect
+all virtual machines to a bridge in the 192.168.58.0/24 network. If this bridge
+does not exist it will setup it for you and also setup NAT so that your virtual machines
+get internet access. A DHCP server will give an ip to the virtual machine.
+
+Once you installed your base OS, you can keep the base image as read only and use copy-on-write
+to your further changes:
+
+    $ vmit disk-snapshot
+    I, [2012-03-14T16:48:13.187875 #20278]  INFO -- : Formatting '/space/vm/minix3/sda-1331740093.qcow2', fmt=qcow2 size=10737418240 backing_file='/space/vm/minix3/sda-1331739923.qcow2' encryption=off cluster_size=65536
+
+You can then rollback to the previous version:
+
+    $ vmit disk-rollback
+    I, [2012-03-14T16:54:02.080964 #20716]  INFO -- : Removing /space/vm/minix3/sda-1331740209.qcow2
+
+    vmit init
+    vmit run
+    vmit disk-snapshot
+    vmit disk-rollback
+    vmit disk-images
+

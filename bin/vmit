@@ -1,0 +1,131 @@
+#!/usr/bin/env ruby
+$: << File.join(File.dirname(__FILE__), "..", "lib")
+require 'rubygems'
+require 'clamp'
+require 'vmit'
+
+#Vmit.logger = Logger.new(STDERR)
+# Don't show by default anything
+#Vmit.logger.level = Logger::INFO
+#Vmit.logger.level = Logger::DEBUG if ENV['DEBUG']
+# TODO find a good format
+#Vmit.logger.formatter = proc do |severity, datetime, progname, msg|
+#  "#{datetime}: #{severity} #{msg}\n"
+#end
+
+module Vmit
+
+  class BaseVmCommand < Clamp::Command
+    option ["-m", "--memory"], "N", "Amount of RAM" do |memory|
+      if not memory =~ /(\d)+(M|K|G)/
+        raise ArgumentError, "Memory should be given as 1M, 2G, etc"
+      end
+      memory
+    end
+
+    option ['-u', '--uuid'], "UUID", "unique id for the virtual machine"
+  end
+
+  class InitCommand < BaseVmCommand
+
+    OPTION_KEYS = [:disk_size, :memory, :uuid]
+
+    option ["-s","--disk-size"], "SIZE",
+        "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
+      if not disk_size =~ /(\d)+(M|K|G)/
+        raise ArgumentError, "Disk size should be given as 1M, 2G, etc"
+      end
+      disk_size
+    end
+
+    def execute
+      options = {}
+      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+
+      OPTION_KEYS.each do |k|
+        val = self.send(k)
+        options[k] = val if val
+      end
+
+      vm.options.merge!(options)
+      vm.save_config!
+
+      vm.disk_image_init!(options)
+
+    end
+
+  end
+
+  class RunCommand < BaseVmCommand
+
+    OPTION_KEYS = [:memory, :cdrom]
+
+    option ["-cdrom","--cdrom"], "CD", "Use CD as cdrom device (ISO, dev)" do |cdrom|
+      if not File.exist?(cdrom)
+        raise ArgumentError, "CDROM cdevice #{cdrom} not found"
+      end
+      cdrom
+    end
+
+    def execute
+      options = {}
+      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+
+      OPTION_KEYS.each do |k|
+        val = self.send(k)
+        options[k] = val if val
+      end
+
+      vm.run(options)
+    end
+
+  end
+
+  class DiskSnapshotCommand < Clamp::Command
+
+    def execute
+      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+      vm.disk_snapshot!
+    end
+
+  end
+
+  class DiskImagesCommand < Clamp::Command
+
+    def execute
+      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+      puts vm.disk_images.last
+    end
+
+  end
+
+  class DiskRollbackCommand < Clamp::Command
+
+    def execute
+      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+      vm.disk_rollback!
+    end
+
+  end
+
+  class MainCommand < Clamp::Command
+
+    subcommand "init", "Initialize the vm", InitCommand
+    subcommand "run", "Run the vm", RunCommand
+    subcommand "disk-images", "List disk images", DiskImagesCommand
+    subcommand "disk-snapshot", "Creates a new disk-snapshot", DiskSnapshotCommand
+    subcommand "disk-rollback", "Rollbacks to previous disk snapshot", DiskRollbackCommand
+
+    # Add commands offered via plugins
+    Vmit.plugins.each do |plugin|
+      if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
+        subcommand plugin.to_s.downcase, "Plugin command", plugin
+        Vmit.logger.info "Enabling #{plugin}"
+      end
+    end
+  end
+
+
+end
+
+Vmit::MainCommand.run
