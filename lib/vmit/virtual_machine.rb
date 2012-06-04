@@ -4,7 +4,6 @@ require 'stringio'
 require 'pidfile'
 require 'fileutils'
 require 'drb'
-require 'uuid'
 
 module Vmit
   
@@ -39,7 +38,7 @@ module Vmit
       end
 
       if not @opts.has_key?(:uuid)
-        @opts[:uuid] = UUID.new.generate
+        @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid")
       end
       
     end
