@@ -38,7 +38,7 @@ module Vmit
       end
 
       if not @opts.has_key?(:uuid)
-        @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid")
+        @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid").strip
       end
       
     end
