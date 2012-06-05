@@ -15,7 +15,11 @@ SWITCH = ENV['VMIT_SWITCH']
 logger.info "  Bringing interface #{ARGV[0]} up"
 Vmit::Utils.run_command(*['/sbin/ifconfig', ARGV[0], '0.0.0.0', 'up'])
 logger.info "    Connecting #{ARGV[0]} --> #{SWITCH}"
-Vmit::Utils.run_command(*['ovs-vsctl', 'add-port', SWITCH, ARGV[0]])
+#Vmit::Utils.run_command(*['ovs-vsctl', 'add-port', SWITCH, ARGV[0]])
+Vmit::Utils.run_command('/sbin/brctl', 'addif', SWITCH, ARGV[0])
+#Vmit::Utils.run_command('/sbin/brctl', 'setfd', SWITCH, '0')
+#Vmit::Utils.run_command('/sbin/brctl', 'stp', SWITCH, 'off')
+
 
 
 

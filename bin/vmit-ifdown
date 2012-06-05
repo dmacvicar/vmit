@@ -11,4 +11,5 @@ SWITCH = ENV['VMIT_SWITCH']
 logger.info "  Bringing down interface #{ARGV[0]}"
 Vmit::Utils.run_command(*['/sbin/ifconfig', ARGV[0], '0.0.0.0', 'down'])
 logger.info "    Disconnecting #{ARGV[0]} -X-> #{SWITCH}"
-Vmit::Utils.run_command(*['ovs-vsctl', 'del-port', SWITCH, ARGV[0]])
+#Vmit::Utils.run_command(*['ovs-vsctl', 'del-port', SWITCH, ARGV[0]])
+Vmit::Utils.run_command('/sbin/brctl', 'delif', SWITCH, ARGV[0])
