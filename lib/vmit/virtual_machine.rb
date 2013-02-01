@@ -71,6 +71,8 @@ module Vmit
       file_name = File.join(work_dir, "sda-#{Time.now.to_i}.qcow2")
       images = disk_images
 
+      file_name = 'base.qcow2' if images.size == 0
+
       args = ['/usr/bin/qemu-img', 'create',
         '-f', "qcow2"]
       
