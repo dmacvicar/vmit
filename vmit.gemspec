@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Duncan Mac-Vicar P."]
   s.email       = ["dmacvicar@suse.de"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{Virtual machine (kvm) command line tool}
+  s.description = %q{vmit makes easy to maintain and run virtual machines.}
 
   s.rubyforge_project = "vmit"
 
@@ -17,5 +17,7 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
-  
+  s.add_dependency('clamp')
+  s.add_dependency('open4')
+  s.add_dependency('pidfile')
 end
