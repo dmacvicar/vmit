@@ -1,5 +1,7 @@
 require 'vmit/version'
 require 'vmit/logger'
+require 'vmit/refcounted_resource'
+require 'vmit/network'
 require 'vmit/virtual_machine'
 
 module Vmit

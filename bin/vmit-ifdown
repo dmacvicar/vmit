@@ -5,11 +5,6 @@ require 'vmit'
 require 'drb'
 
 DRb.start_service
-logger = DRbObject.new nil, ENV['VMIT_LOGSERVER']
-SWITCH = ENV['VMIT_SWITCH']
+vmit = DRbObject.new nil, ENV['VMIT_SERVER']
 
-logger.info "  Bringing down interface #{ARGV[0]}"
-Vmit::Utils.run_command(*['/sbin/ifconfig', ARGV[0], '0.0.0.0', 'down'])
-logger.info "    Disconnecting #{ARGV[0]} -X-> #{SWITCH}"
-#Vmit::Utils.run_command(*['ovs-vsctl', 'del-port', SWITCH, ARGV[0]])
-Vmit::Utils.run_command('/sbin/brctl', 'delif', SWITCH, ARGV[0])
+vmit.ifdown(ARGV[0])

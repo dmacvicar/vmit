@@ -1,19 +1,22 @@
-require 'vmit/utils'
-require 'yaml'
-require 'stringio'
-require 'pidfile'
-require 'fileutils'
+require 'cheetah'
 require 'drb'
+require 'fileutils'
+require 'pidfile'
+require 'stringio'
+require 'yaml'
+
+require 'vmit/utils'
 
 module Vmit
-  
+
   class VirtualMachine
 
     attr_accessor :work_dir
 
     VM_DEFAULTS = {
-      :memory => '1G',      
+      :memory => '1G',
     }
+    SWITCH = 'br0'
 
     def config_file
       File.join(work_dir, 'config.yml')
@@ -40,7 +43,15 @@ module Vmit
       if not @opts.has_key?(:uuid)
         @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid").strip
       end
-      
+
+      if @opts.has_key?(:network)
+        @network = Network.find(@opts[:network])
+        if not @network
+          raise "Network #{@opts[:network]} is unknown"
+        end
+      else
+        @network = Network.default
+      end
     end
 
     # @return [Array,<String>] sorted list of snapshots
@@ -75,7 +86,7 @@ module Vmit
 
       args = ['/usr/bin/qemu-img', 'create',
         '-f', "qcow2"]
-      
+
       if not images.empty?
         args << '-b'
         args << images.last
@@ -84,13 +95,13 @@ module Vmit
       if images.empty?
         args << runtime_opts[:disk_size]
       end
-  
-      Vmit::Utils.run_command(*args)
+
+      Cheetah.run(*args)
     end
 
     def disk_rollback!
       images = disk_images
-      
+
       return if images.empty?
 
       if images.size == 1
@@ -139,8 +150,12 @@ module Vmit
 
     BINDIR = File.join(File.dirname(__FILE__), '../../bin')
 
+    # @param [Hash] runtime_opts Runtime options
+    #   @option runtime_opts [String] :cdrom CDROM image
+    #   @option runtime_opts [String] :kernel Kernel image
+    #   @option runtime_opts [String] :initrd initrd image
+    #   @option runtime_opts [String] :append Kernel command line
     def run(runtime_opts)
-      
       Vmit.logger.info "Starting VM..."
       @opts.merge!(runtime_opts)
 
@@ -158,9 +173,13 @@ module Vmit
             '-m', "#{@opts[:memory]}",
             '-net', "nic,macaddr=#{@opts[:mac_address]}",
             '-net', "tap,script=#{ifup},downscript=#{ifdown}"]
-        if @opts.has_key?(:cdrom)
-          args << '-cdrom'
-          args << @opts[:cdrom]
+
+        # advanced options, mostly to be used by plugins
+        [:cdrom, :kernel, :initrd, :append].each do |key|
+          if @opts.has_key?(key)
+            args << "-#{key}"
+            args << @opts[key]
+          end
         end
 
         unless ENV['DISABLE_UUID']
@@ -170,19 +189,38 @@ module Vmit
 
         #Vmit::Utils.setup_network!
 
-        DRb.start_service nil, Vmit::LogServer.new
-        ENV['VMIT_LOGSERVER'] = DRb.uri
-        ENV['VMIT_SWITCH'] = 'br0'
-        Vmit.logger.debug "Log server listening at #{DRb.uri}"
+        #DRb.start_service nil, Vmit::LogServer.new
+        #ENV['VMIT_LOGSERVER'] = DRb.uri
+        DRb.start_service nil, self
+        ENV['VMIT_SERVER'] = DRb.uri
 
-        Vmit::Utils.run_command(*args)
+        ENV['VMIT_SWITCH'] = SWITCH
+        Vmit.logger.debug "Vmit server listening at #{DRb.uri}"
+
+        @network.auto do
+          Cheetah.run(*args)
+        end
       rescue PidFile::DuplicateProcessError => e
         Vmit.logger.fatal "VM in '#{work_dir}'' is already running (#{e})"
       rescue Exception => e
         Vmit.logger.fatal e.message
+        e.backtrace.each do |bt_line|
+          Vmit.logger.debug "  #{bt_line}"
+        end
       end
     end
 
+    def ifup(device)
+      Vmit.logger.info "  Bringing interface #{device} up"
+      Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'up'
+      @network.connect_interface(device)
+    end
+
+    def ifdown(device)
+      Vmit.logger.info "  Bringing down interface #{device}"
+      Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'down'
+      @network.disconnect_interface(device)
+    end
   end
 
 end
