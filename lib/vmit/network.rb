@@ -73,11 +73,7 @@ module Vmit
       Cheetah.run 'iptables', '-t', 'nat', '-A', 'POSTROUTING', '-s', @address.network.to_string,
         '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
 
-      dnsmasq_pidfile = File.join(lockfile_dir, 'dnsmasq.pid')
-      dnsmasq_args = %W(dnsmasq -Z -x #{dnsmasq_pidfile} --strict-order --bind-interfaces --listen-address #{@address.network.hosts[0]} --dhcp-range #{@address.network.hosts[1]},#{@address.network.hosts.last})
-      Vmit.logger.debug "dnsmasq arguments: '#{dnsmasq_args.join(' ')}'"
-      @dnsmasq = IO.popen(dnsmasq_args)
-      Vmit.logger.info "  dnsmasq spawned with pid #{@dnsmasq.pid}"
+      start_dnsmasq
     end
 
     def connect_interface(device)
@@ -92,11 +88,7 @@ module Vmit
       Cheetah.run '/sbin/brctl', 'delbr', @brdevice
       Cheetah.run 'iptables', '-t', 'nat', '-D', 'POSTROUTING', '-s', @address.network.to_string,
         '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
-      Vmit.logger.info "Killing dnsmasq #{@dnsmasq.pid}"
-
-      dnsmasq_pidfile = File.join(lockfile_dir, 'dnsmasq.pid')
-      dnsmasq_pid = File.read(dnsmasq_pidfile).strip.to_i
-      Process.kill('SIGTERM', dnsmasq_pid) if @dnsmasq
+      kill_dnsmasq
     end
 
     # reimplemented from RefcountedResource
@@ -112,6 +104,26 @@ module Vmit
 
     # reimplemented from RefcountedResource
     def on_release
+    end
+
+    def start_dnsmasq
+      dnsmasq_args = %W(dnsmasq -Z -x #{dnsmasq_pidfile} --strict-order --bind-interfaces --listen-address #{@address.network.hosts[0]} --dhcp-range #{@address.network.hosts[1]},#{@address.network.hosts.last})
+      Vmit.logger.debug "dnsmasq arguments: '#{dnsmasq_args.join(' ')}'"
+      IO.popen(dnsmasq_args)
+      Vmit.logger.info "  dnsmasq spawned with pid #{dnsmasq_pid}"
+    end
+
+    def kill_dnsmasq
+      Vmit.logger.info "Killing dnsmasq (#{dnsmasq_pid})"
+      Process.kill('SIGTERM', dnsmasq_pid)
+    end
+
+    def dnsmasq_pid
+      File.read(dnsmasq_pidfile).strip.to_i
+    end
+
+    def dnsmasq_pidfile
+      File.join(lockfile_dir, 'dnsmasq.pid')
     end
 
   end
