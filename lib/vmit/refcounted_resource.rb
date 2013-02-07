@@ -1,3 +1,4 @@
+require 'abstract_method'
 require 'tmpdir'
 
 module Vmit
@@ -30,6 +31,50 @@ module Vmit
     attr_reader :lockfile_path
     attr_reader :lockfile_dir
 
+    # The resource class. Resources with the
+    # same class and name are considered to be
+    # the same resource by the locking and refcounting
+    # mechanism.
+    #
+    # For example, you may subclass RefcountedResource as
+    # Network, and then have multiple Network subclasses, but
+    # you can reimplement resource_class once in Network so that
+    # all Network subclasses have the same resource class.
+    #
+    def resource_class
+      (self.class.name.split('::').last || '').downcase
+    end
+
+    def initialize(name)
+      @name = name
+      # Allow the testcases to run as not root
+      resource_dir = File.join(Vmit::RUN_DIR, 'resources')
+      @lockfile_dir = File.join(resource_dir, resource_class, name)
+      FileUtils.mkdir_p @lockfile_dir
+      @lockfile_path = File.join(@lockfile_dir, 'lock')
+    end
+
+    # Creates a temporary resource with a random name
+    # @return [RefcountedResource]
+    def self.make_temp
+      name = File.basename(Dir::Tmpname.make_tmpname([resource_class, 'tmp'],
+        File.join(resource_dir, resource_class)))
+      self.new(name)
+    end
+
+    abstract_method :on_up
+    abstract_method :on_down
+    abstract_method :on_acquire
+    abstract_method :on_release
+
+    # Executes the given block.
+    # @yield calling before on_up once per group of
+    #   processes using the same resurce, and
+    #   on_acquire before executing the block.
+    #   It will execute on_release after executing the
+    #   block and the last process using the reource
+    #   will call on_down
+    #
     def auto
       begin
         Vmit.logger.debug "Using resource lock #{lockfile_path}"
@@ -62,33 +107,6 @@ module Vmit
       ensure
         File.unlink(lockfile_path)
       end
-    end
-
-    def initialize(name)
-      @name = name
-      # Allow the testcases to run as not root
-      resource_dir = File.join(Vmit::RUN_DIR, 'resources')
-      class_dir = (self.class.name.split('::').last || '').downcase
-      @lockfile_dir = File.join(resource_dir, class_dir, name)
-      FileUtils.mkdir_p @lockfile_dir
-      @lockfile_path = File.join(@lockfile_dir, 'lock')
-      #@lockfile_path = '/tmp/vmit-lock'
-    end
-
-    def on_up
-      raise NotImplementedError
-    end
-
-    def on_down
-      raise NotImplementedError
-    end
-
-    def on_acquire
-      raise NotImplementedError
-    end
-
-    def on_release
-      raise NotImplementedError
     end
 
   end

@@ -1,3 +1,4 @@
+require 'abstract_method'
 require 'cheetah'
 require 'ipaddress'
 require 'yaml'
@@ -7,6 +8,13 @@ require 'vmit/refcounted_resource'
 module Vmit
 
   class Network < RefcountedResource
+
+    abstract_method :connect_interface
+    abstract_method :disconnect_interface
+
+    def resource_class
+      'network'
+    end
 
     def self.create(config)
       case config
@@ -21,19 +29,19 @@ module Vmit
         # transform keys into Symbols
         networks = YAML::load(f)
         if networks.has_key?(name)
-          return from_config(name, networks[name].symbolize_keys)
+          return from_config(networks[name].symbolize_keys)
         else
           raise "Unknown network #{name}"
         end
       end
     end
 
-    def self.from_config(name, config)
-      BridgedNetwork.new(name, config[:address])
+    def self.from_config(config)
+      BridgedNetwork.new(config[:address])
     end
 
     def self.default
-      BridgedNetwork.new('default', BridgedNetwork::DEFAULT_NETWORK)
+      BridgedNetwork.new(BridgedNetwork::DEFAULT_NETWORK)
     end
   end
 
@@ -44,16 +52,15 @@ module Vmit
 
     DEFAULT_NETWORK = '192.168.58.254/24'
 
-    def initialize(name, address)
-      super(name)
-
+    def initialize(address)
       @address = IPAddress(address).network
       brdevice = 'br0'
       @brdevice = brdevice
+      super("#{@brdevice}-#{@address.to_u32}")
     end
 
     def to_s
-      "#{@address.to_string} bridged: #{@brdevice}"
+      "#{@brdevice}:#{@address.to_string}"
     end
 
     # reimplemented from RefcountedResource
@@ -110,7 +117,7 @@ module Vmit
       dnsmasq_args = %W(dnsmasq -Z -x #{dnsmasq_pidfile} --strict-order --bind-interfaces --listen-address #{@address.network.hosts[0]} --dhcp-range #{@address.network.hosts[1]},#{@address.network.hosts.last})
       Vmit.logger.debug "dnsmasq arguments: '#{dnsmasq_args.join(' ')}'"
       IO.popen(dnsmasq_args)
-      Vmit.logger.info "  dnsmasq spawned with pid #{dnsmasq_pid}"
+      #Vmit.logger.info "  dnsmasq spawned with pid #{dnsmasq_pid}"
     end
 
     def kill_dnsmasq

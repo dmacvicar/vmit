@@ -22,4 +22,5 @@ Gem::Specification.new do |s|
   s.add_dependency('pidfile')
   s.add_dependency('cheetah')
   s.add_dependency('ipaddress')
+  s.add_dependency('abstract_method')
 end

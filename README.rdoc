@@ -20,6 +20,8 @@ you are working with.
 
 == Usage
 
+=== First steps
+
 Just create a directory for your VM:
 
     mkdir myvm
@@ -27,7 +29,7 @@ Just create a directory for your VM:
 
 You don't need any configuration, but without a disk image:
 
-    $ vmit run 
+    $ vmit run
     I, [2012-03-14T16:40:07.368677 #19781]  INFO -- : Starting VM...
     I, [2012-03-14T16:40:07.368774 #19781]  INFO -- :   => memory : 1G
     I, [2012-03-14T16:40:07.368840 #19781]  INFO -- :   => mac_address : 0e:86:d7:76:94:89
@@ -36,9 +38,9 @@ You don't need any configuration, but without a disk image:
 So try init first. You can specify disk size or memory as parameter. Any option which is
 not a default wil be written into a config.yml file:
 
-    $ vmit init 
+    $ vmit init
     I, [2012-03-14T16:45:23.477649 #20129]  INFO -- : Writing config.yml...
-    I, [2012-03-14T16:45:23.607814 #20129]  INFO -- : Formatting '/space/vm/minix3/sda-1331739923.qcow2', fmt=qcow2 size=10737418240 encryption=off cluster_size=65536 
+    I, [2012-03-14T16:45:23.607814 #20129]  INFO -- : Formatting '/space/vm/minix3/sda-1331739923.qcow2', fmt=qcow2 size=10737418240 encryption=off cluster_size=65536
 
 The just launch the vm. You can pass a cdrom with --cdrom
 
@@ -54,6 +56,8 @@ You don't care about network setup. If you don't say anything vmit will connect
 all virtual machines to a bridge in the 192.168.58.0/24 network. If this bridge
 does not exist it will setup it for you and also setup NAT so that your virtual machines
 get internet access. A DHCP server will give an ip to the virtual machine.
+
+=== Snapshots
 
 Once you installed your base OS, you can keep the base image as read only and use copy-on-write
 to your further changes:
@@ -71,4 +75,41 @@ You can then rollback to the previous version:
     vmit disk-snapshot
     vmit disk-rollback
     vmit disk-images
+
+== Configuration
+
+Per-VM configuration is stored in the virtual machine directory in a file called config.yml.
+
+=== General
+
+Automatically generated configuration is stored in config.yml
+
+---
+:mac_address: 8e:55:c5:de:a0:16
+:uuid: 7c6ff9eb-fe14-4444-bbbf-a6d954870978
+
+=== Networking
+
+If you don't do anything, the VM will be attached to 192.168.58.0/24 on a bridge, and NAT will be
+setup on the network.
+
+You can override the network in config.yml:
+
+:network:
+  :address: 192.168.51.0/24
+
+Or, you can edit /root/.vmit/networks.yml
+
+---
+myalias:
+  address: 192.168.51.0/24
+
+And then in config.yml
+
+:network: myalias
+
+
+
+
+You can create global
 
