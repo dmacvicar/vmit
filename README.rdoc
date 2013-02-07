@@ -84,9 +84,9 @@ Per-VM configuration is stored in the virtual machine directory in a file called
 
 Automatically generated configuration is stored in config.yml
 
----
-:mac_address: 8e:55:c5:de:a0:16
-:uuid: 7c6ff9eb-fe14-4444-bbbf-a6d954870978
+    ---
+    :mac_address: 8e:55:c5:de:a0:16
+    :uuid: 7c6ff9eb-fe14-4444-bbbf-a6d954870978
 
 === Networking
 
@@ -95,18 +95,18 @@ setup on the network.
 
 You can override the network in config.yml:
 
-:network:
-  :address: 192.168.51.0/24
+    :network:
+      :address: 192.168.51.0/24
 
 Or, you can edit /root/.vmit/networks.yml
 
----
-myalias:
-  address: 192.168.51.0/24
+    ---
+    myalias:
+      address: 192.168.51.0/24
 
 And then in config.yml
 
-:network: myalias
+    :network: myalias
 
 
 
