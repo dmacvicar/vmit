@@ -3,8 +3,14 @@ require 'vmit/logger'
 require 'vmit/refcounted_resource'
 require 'vmit/network'
 require 'vmit/virtual_machine'
+require 'vmit/ext'
 
 module Vmit
+
+  RUN_DIR = case Process.uid
+    when 0 then '/run/vmit'
+    else File.join(Dir::tmpdir, 'vmit')
+  end
 
   module Plugins
   end

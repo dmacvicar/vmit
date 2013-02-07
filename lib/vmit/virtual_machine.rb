@@ -44,14 +44,13 @@ module Vmit
         @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid").strip
       end
 
-      if @opts.has_key?(:network)
-        @network = Network.find(@opts[:network])
-        if not @network
-          raise "Network #{@opts[:network]} is unknown"
-        end
+      @network = if @opts.has_key?(:network)
+        Network.create(@opts[:network])
       else
-        @network = Network.default
+        Vmit.logger.info 'No network selected. Using default.'
+        Network.default
       end
+      Vmit.logger.info "Network: #{@network}"
     end
 
     # @return [Array,<String>] sorted list of snapshots
@@ -187,10 +186,6 @@ module Vmit
           args << "#{@opts[:uuid]}"
         end
 
-        #Vmit::Utils.setup_network!
-
-        #DRb.start_service nil, Vmit::LogServer.new
-        #ENV['VMIT_LOGSERVER'] = DRb.uri
         DRb.start_service nil, self
         ENV['VMIT_SERVER'] = DRb.uri
 
