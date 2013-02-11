@@ -60,6 +60,7 @@ module Vmit
       end
     end
 
+    # Takes a disk snapshot
     def disk_snapshot!
       disk_image_shift!
     end
@@ -98,6 +99,7 @@ module Vmit
       Cheetah.run(*args)
     end
 
+    # Rolls back to the previous snapshot
     def disk_rollback!
       images = disk_images
 
@@ -111,6 +113,7 @@ module Vmit
       FileUtils.rm(images.last)
     end
 
+    # @returns [String] The latest COW snapshot
     def current_image
       curr = disk_images.last
       raise "No hard disk image available" if curr.nil?
@@ -149,6 +152,8 @@ module Vmit
 
     BINDIR = File.join(File.dirname(__FILE__), '../../bin')
 
+    # Starts the virtual machine
+    #
     # @param [Hash] runtime_opts Runtime options
     #   @option runtime_opts [String] :cdrom CDROM image
     #   @option runtime_opts [String] :kernel Kernel image
@@ -216,12 +221,14 @@ module Vmit
       end
     end
 
+    # Called by vmit-ifup
     def ifup(device)
       Vmit.logger.info "  Bringing interface #{device} up"
       Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'up'
       @network.connect_interface(device)
     end
 
+    # Called by vmit-ifdown
     def ifdown(device)
       Vmit.logger.info "  Bringing down interface #{device}"
       Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'down'
