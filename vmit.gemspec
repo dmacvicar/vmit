@@ -23,4 +23,6 @@ Gem::Specification.new do |s|
   s.add_dependency('cheetah')
   s.add_dependency('ipaddress')
   s.add_dependency('abstract_method')
+  s.add_dependency('progressbar')
+  s.add_dependency('activesupport')
 end

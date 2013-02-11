@@ -2,7 +2,7 @@ require 'clamp'
 
 module Vmit
   module Plugins
-    class HelloPlugin < ::Clamp::Command
+    class Hello < ::Clamp::Command
 
       def execute
         puts "Hello"

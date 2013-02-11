@@ -23,7 +23,6 @@ module Vmit
     def self.random_mac_address
       ("%02x"%((rand 64).to_i*4|2))+(0..4).inject(""){|s,x|s+":%02x"%(rand 256).to_i}
     end
-
   end
 
 end

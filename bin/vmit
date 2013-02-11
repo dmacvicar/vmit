@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 $: << File.join(File.dirname(__FILE__), "..", "lib")
 require 'rubygems'
+require 'active_support/inflector'
 require 'clamp'
 require 'vmit'
 
@@ -119,8 +120,9 @@ module Vmit
     # Add commands offered via plugins
     Vmit.plugins.each do |plugin|
       if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
-        subcommand plugin.to_s.downcase, "Plugin command", plugin
-        Vmit.logger.info "Enabling #{plugin}"
+        plugin_id = plugin.to_s.split('::').last.underscore
+        subcommand plugin_id, "Plugin command", plugin
+        Vmit.logger.info "Enabling plugin #{plugin_id}"
       end
     end
   end
