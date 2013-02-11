@@ -154,6 +154,7 @@ module Vmit
     #   @option runtime_opts [String] :kernel Kernel image
     #   @option runtime_opts [String] :initrd initrd image
     #   @option runtime_opts [String] :append Kernel command line
+    #   @option runtime_opts [String] :floppy Floppy (image or directory)
     def run(runtime_opts)
       Vmit.logger.info "Starting VM..."
       @opts.merge!(runtime_opts)
@@ -180,6 +181,16 @@ module Vmit
             args << @opts[key]
           end
         end
+
+        case
+          when File.directory?(@opts[:floppy])
+            args << '-fda'
+            args << "fat:floppy:#{@opts[:floppy]}"
+          else
+            Vmit.logger.warn "#{@opts[:floppy]} : only directories supported"
+        end
+
+
 
         unless ENV['DISABLE_UUID']
           args << '-uuid'
