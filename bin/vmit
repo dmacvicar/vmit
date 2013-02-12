@@ -130,4 +130,9 @@ module Vmit
 
 end
 
-Vmit::MainCommand.run
+begin
+  Vmit::MainCommand.run
+rescue Exception => e
+  Vmit.logger.error e.message
+  exit(1)
+end
