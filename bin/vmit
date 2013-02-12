@@ -122,7 +122,7 @@ module Vmit
       if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
         plugin_id = plugin.to_s.split('::').last.underscore
         subcommand plugin_id, "Plugin command", plugin
-        Vmit.logger.info "Enabling plugin #{plugin_id}"
+        Vmit.logger.debug "Enabling plugin #{plugin_id}"
       end
     end
   end
