@@ -66,7 +66,13 @@ module Vmit
         Vmit.logger.info 'Starting bootstrap'
         curr_dir = File.expand_path(Dir.pwd)
         vm = Vmit::VirtualMachine.new(curr_dir)
-        repo_uri = URI.parse(repository)
+
+        # it is a directory, and URI.join sucks
+        repo_s = case
+          when repository.end_with?('/') then repository
+          else repository + '/'
+        end
+        repo_uri = URI.parse(repo_s)
         arch = 'x86_64'
 
         Dir.mktmpdir do |dir|
