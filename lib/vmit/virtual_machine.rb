@@ -101,6 +101,7 @@ module Vmit
         args << runtime_opts[:disk_size]
       end
 
+      Vmit.logger.info "Shifted image. Current is '#{file_name}'."
       Cheetah.run(*args)
     end
 
@@ -194,7 +195,11 @@ module Vmit
         [:cdrom, :kernel, :initrd, :append].each do |key|
           if opts.has_key?(key)
             args << "-#{key}"
-            args << opts[key]
+            args << case opts[key]
+              # append is multple
+              when Array then opts[key].join(' ')
+              else opts[key]
+            end
           end
         end
 

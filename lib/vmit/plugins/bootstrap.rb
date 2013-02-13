@@ -1,9 +1,101 @@
 require 'vmit/autoyast'
+require 'abstract_method'
 require 'clamp'
 require 'net/http'
-require 'progressbar'
 require 'tmpdir'
 
+module Vmit
+  module Bootstrap
+
+    # Base class for bootstrap methods
+    class Method
+    end
+
+    module MethodAutoYaST
+      # @param [Hash] args Arguments for 1st stage
+      def execute_autoyast(args)
+        Dir.mktmpdir do |floppy_dir|
+
+          qemu_args = {:floppy => floppy_dir,
+                      :append => "autoyast=device://fd0/autoinst.xml",
+                      :reboot => false}
+          # transform duplicates into an array
+          qemu_args.merge!(args) do |key, oldv, newv|
+            case key
+              when :append then [oldv, newv].flatten
+              else newv
+            end
+          end
+
+          autoyast = Vmit::AutoYaST.new
+          # Configure the autoinstallation profile to persist eth0
+          # for the current MAC address
+          # The interface will be setup with DHCP by default.
+          # TODO: make this more flexible in the future?
+          #autoyast.name_network_device(vm[:mac_address], 'eth0')
+          File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
+          Vmit.logger.info "AutoYaST: 1st stage."
+          vm.run(qemu_args)
+          Vmit.logger.info "AutoYaST: 2st stage."
+          # 2nd stage
+          vm.run(:reboot => false)
+        end
+      end
+    end
+
+    # Boostraps a vm from a SUSE repository
+    class MethodRepo
+
+      attr_reader :vm
+
+      include MethodAutoYaST
+
+      def initialize(vm, repo)
+        # it is a directory, and URI.join sucks
+        repo_s = case
+          when repo.end_with?('/') then repo
+          else repo + '/'
+        end
+        @repo_uri = URI.parse(repo_s)
+        @vm = vm
+      end
+
+      def execute
+        arch = 'x86_64'
+
+        Dir.mktmpdir do |dir|
+          kernel = File.join(dir, 'linux')
+          initrd = File.join(dir, 'initrd')
+
+          Vmit::Utils.download_file(URI.join(@repo_uri,
+                                    "boot/#{arch}/loader/linux"), kernel)
+          Vmit::Utils.download_file(URI.join(@repo_uri,
+                                    "boot/#{arch}/loader/initrd"), initrd)
+
+          kernel_size = File.size?(kernel)
+          initrd_size = File.size?(initrd)
+
+          if ! (kernel_size && initrd_size)
+            Vmit.logger.error "Can't download kernel & initrd"
+            return 1
+          end
+
+          Vmit.logger.info "kernel: #{Vmit::Utils.kernel_version(kernel)} #{kernel_size} bytes initrd: #{initrd_size} bytes"
+
+          # call autoyast here
+          execute_autoyast(:kernel => kernel, :initrd => initrd, :append => "install=#{@repo_uri}")
+        end
+      end
+    end
+
+    # Boostraps a machine from a bootable ISO image
+    class BootstrapMethodIso
+      def initialize(vm, iso)
+      end
+    end
+
+  end
+end
 
 module Vmit
   module Plugins
@@ -15,42 +107,6 @@ module Vmit
     # the repository.
     #
     class Bootstrap < ::Clamp::Command
-
-      # Utility function, may be move it
-      # to Vmit::Utils in the future
-      def download_file(uri, target)
-        progress = ProgressBar.new(File.basename(uri.path), 100)
-        Net::HTTP.start(uri.host) do |http|
-          begin
-            file = open(target, 'wb')
-            http.request_get(uri.path) do |response|
-              dl_size = response.content_length
-              already_dl = 0
-              response.read_body do |segment|
-              already_dl += segment.length
-              if(already_dl != 0)
-                progress.set((already_dl * 100) / dl_size)
-              end
-              file.write(segment)
-              end
-            end
-          ensure
-            file.close
-          end
-        end
-      end
-
-      def kernel_version(bzimage)
-        offset = 0
-        File.open(bzimage) do |f|
-          f.seek(0x20E)
-          offset = f.read(2).unpack('s')[0]
-          f.seek(offset + 0x200)
-          ver = f.read(128).unpack('Z*')[0]
-          return ver.split(' ')[0]
-        end
-        nil
-      end
 
       option ["-s","--disk-size"], "SIZE",
         "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
@@ -67,57 +123,19 @@ module Vmit
         curr_dir = File.expand_path(Dir.pwd)
         vm = Vmit::VirtualMachine.new(curr_dir)
 
-        # it is a directory, and URI.join sucks
-        repo_s = case
-          when repository.end_with?('/') then repository
-          else repository + '/'
-        end
-        repo_uri = URI.parse(repo_s)
-        arch = 'x86_64'
+        Vmit.logger.info '  Deleting old images'
+        FileUtils.rm_f(Dir.glob('*.qcow2'))
+        opts = {}
+        opts[:disk_size] = disk_size if disk_size
+        vm.disk_image_init!(opts)
+        vm.save_config!
 
-        Dir.mktmpdir do |dir|
-          kernel = File.join(dir, 'linux')
-          initrd = File.join(dir, 'initrd')
+        method = Vmit::Bootstrap::MethodRepo.new(vm, repository)
+        method.execute
 
-          download_file(URI.join(repo_uri, "boot/#{arch}/loader/linux"), kernel)
-          download_file(URI.join(repo_uri, "boot/#{arch}/loader/initrd"), initrd)
-
-
-          kernel_size = File.size?(kernel)
-          initrd_size = File.size?(initrd)
-
-          if ! (kernel_size && initrd_size)
-            Vmit.logger.error "Can't download kernel & initrd"
-            return 1
-          end
-
-          Vmit.logger.info "kernel: #{kernel_version(kernel)} #{kernel_size} bytes initrd: #{initrd_size} bytes"
-
-          FileUtils.rm_f "base.qcow2"
-          opts = {}
-          opts[:disk_size] = disk_size if disk_size
-          vm.disk_image_init!(opts)
-          vm.save_config!
-
-          Dir.mktmpdir do |floppy_dir|
-            autoyast = Vmit::AutoYaST.new
-            # Configure the autoinstallation profile to persist eth0
-            # for the current MAC address
-            # The interface will be setup with DHCP by default.
-            # TODO: make this more flexible in the future?
-            #autoyast.name_network_device(vm[:mac_address], 'eth0')
-            File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
-            vm.run(:kernel => kernel, :initrd => initrd,
-                  :floppy => floppy_dir,
-                  :append => "install=#{repo_uri} autoyast=device://fd0/autoinst.xml",
-                  :reboot => false)
-            # 2nd stage
-            vm.run(:reboot => false)
-            Vmit.logger.info 'Creating snapshot of fresh system.'
-            vm.disk_snapshot!
-            Vmit.logger.info 'Bootstraping done. Call vmit run to start your system.'
-          end
-        end
+        Vmit.logger.info 'Creating snapshot of fresh system.'
+        vm.disk_snapshot!
+        Vmit.logger.info 'Bootstraping done. Call vmit run to start your system.'
       end
 
     end
