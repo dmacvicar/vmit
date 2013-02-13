@@ -1,3 +1,4 @@
+require 'vmit/autoyast'
 require 'clamp'
 require 'net/http'
 require 'progressbar'
@@ -39,6 +40,18 @@ module Vmit
         end
       end
 
+      def kernel_version(bzimage)
+        offset = 0
+        File.open(bzimage) do |f|
+          f.seek(0x20E)
+          offset = f.read(2).unpack('s')[0]
+          f.seek(offset + 0x200)
+          ver = f.read(128).unpack('Z*')[0]
+          return ver.split(' ')[0]
+        end
+        nil
+      end
+
       option ["-s","--disk-size"], "SIZE",
         "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
         if not disk_size =~ /(\d)+(M|K|G)/
@@ -50,6 +63,7 @@ module Vmit
       parameter "REPOSITORY", "Repository URL to bootstrap from"
 
       def execute
+        Vmit.logger.info 'Starting bootstrap'
         curr_dir = File.expand_path(Dir.pwd)
         vm = Vmit::VirtualMachine.new(curr_dir)
         repo_uri = URI.parse(repository)
@@ -62,6 +76,7 @@ module Vmit
           download_file(URI.join(repo_uri, "boot/#{arch}/loader/linux"), kernel)
           download_file(URI.join(repo_uri, "boot/#{arch}/loader/initrd"), initrd)
 
+
           kernel_size = File.size?(kernel)
           initrd_size = File.size?(initrd)
 
@@ -70,16 +85,32 @@ module Vmit
             return 1
           end
 
-          Vmit.logger.info "kernel: #{kernel_size} bytes initrd: #{initrd_size} bytes"
+          Vmit.logger.info "kernel: #{kernel_version(kernel)} #{kernel_size} bytes initrd: #{initrd_size} bytes"
 
           FileUtils.rm_f "base.qcow2"
           opts = {}
           opts[:disk_size] = disk_size if disk_size
           vm.disk_image_init!(opts)
+          vm.save_config!
 
-          vm.run(:kernel => kernel, :initrd => initrd,
-                :floppy => File.join(Dir.pwd, 'floppy'),
-            :append => "install=#{repo_uri} autoyast=device://fd0/autoinst.xml")
+          Dir.mktmpdir do |floppy_dir|
+            autoyast = Vmit::AutoYaST.new
+            # Configure the autoinstallation profile to persist eth0
+            # for the current MAC address
+            # The interface will be setup with DHCP by default.
+            # TODO: make this more flexible in the future?
+            #autoyast.name_network_device(vm[:mac_address], 'eth0')
+            File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
+            vm.run(:kernel => kernel, :initrd => initrd,
+                  :floppy => floppy_dir,
+                  :append => "install=#{repo_uri} autoyast=device://fd0/autoinst.xml",
+                  :reboot => false)
+            # 2nd stage
+            vm.run(:reboot => false)
+            Vmit.logger.info 'Creating snapshot of fresh system.'
+            vm.disk_snapshot!
+            Vmit.logger.info 'Bootstraping done. Call vmit run to start your system.'
+          end
         end
       end
 

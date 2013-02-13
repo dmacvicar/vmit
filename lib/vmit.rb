@@ -4,6 +4,7 @@ require 'vmit/refcounted_resource'
 require 'vmit/network'
 require 'vmit/virtual_machine'
 require 'vmit/ext'
+require 'pidfile'
 
 module Vmit
 
@@ -28,7 +29,6 @@ end
 
 # Scan plugins
 plugin_glob = File.join(File.dirname(__FILE__), 'vmit', 'plugins', '*.rb')
-puts plugin_glob
 Dir.glob(plugin_glob).each do |plugin|
   Vmit.logger.debug("Loading file: #{plugin}")
   #puts "Loading file: #{plugin}"

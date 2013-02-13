@@ -132,7 +132,14 @@ end
 
 begin
   Vmit::MainCommand.run
+rescue SystemExit, Interrupt
+  Vmit.logger.fatal "interrupted"
+  exit(1)
 rescue Exception => e
-  Vmit.logger.error e.message
+  Vmit.logger.fatal e.message
+  e.backtrace.each do |bt_line|
+    Vmit.logger.debug "  #{bt_line}"
+  end
   exit(1)
 end
+exit(0)

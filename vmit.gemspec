@@ -25,4 +25,5 @@ Gem::Specification.new do |s|
   s.add_dependency('abstract_method')
   s.add_dependency('progressbar')
   s.add_dependency('activesupport')
+  s.add_dependency('nokogiri')
 end

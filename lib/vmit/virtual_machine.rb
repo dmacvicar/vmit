@@ -1,7 +1,6 @@
 require 'cheetah'
 require 'drb'
 require 'fileutils'
-require 'pidfile'
 require 'stringio'
 require 'yaml'
 
@@ -18,11 +17,17 @@ module Vmit
     }
     SWITCH = 'br0'
 
+    # Accessor to current options
+    def [](key)
+      @opts[key]
+    end
+
     def config_file
       File.join(work_dir, 'config.yml')
     end
 
     def initialize(work_dir)
+      @pidfile = PidFile.new(:piddir => work_dir, :pidfile => "vmit.pid")
       @work_dir = work_dir
 
       @opts = {}
@@ -32,7 +37,7 @@ module Vmit
         @opts.merge!(YAML::load(File.open(config_file)))
       end
 
-      # By default the following keys are useful to be 
+      # By default the following keys are useful to be
       # generated if they don't exist and then use the
       # same in the future UNLESS they are
       # overriden with vmit run
@@ -162,7 +167,11 @@ module Vmit
     #   @option runtime_opts [String] :floppy Floppy (image or directory)
     def run(runtime_opts)
       Vmit.logger.info "Starting VM..."
-      @opts.merge!(runtime_opts)
+      # Don't overwrite @opts so that
+      # run can be called various times
+      opts = {}
+      opts.merge!(@opts)
+      opts.merge!(runtime_opts)
 
       config.each do |k,v|
         Vmit.logger.info "  => #{k} : #{v}"
@@ -172,34 +181,44 @@ module Vmit
         ifup = File.expand_path(File.join(BINDIR, 'vmit-ifup'))
         ifdown = File.expand_path(File.join(BINDIR, 'vmit-ifdown'))
 
-        PidFile.new(:piddir => work_dir, :pidfile => "qemu.pid")
         args = ['/usr/bin/qemu-kvm', '-boot', 'c',
             '-drive', "file=#{current_image},if=virtio",
-            '-m', "#{@opts[:memory]}",
-            '-net', "nic,macaddr=#{@opts[:mac_address]}",
-            '-net', "tap,script=#{ifup},downscript=#{ifdown}"]
+            '-m', "#{opts[:memory]}",
+            #'-net', "nic,macaddr=#{opts[:mac_address]}",
+            #'-net', "tap,script=#{ifup},downscript=#{ifdown}",
+            '-netdev', "type=tap,script=#{ifup},downscript=#{ifdown},id=vnet0",
+            '-device', "virtio-net-pci,netdev=vnet0,mac=#{opts[:mac_address]}",
+            '-pidfile', File.join(work_dir, 'qemu.pid')]
 
         # advanced options, mostly to be used by plugins
         [:cdrom, :kernel, :initrd, :append].each do |key|
-          if @opts.has_key?(key)
+          if opts.has_key?(key)
             args << "-#{key}"
-            args << @opts[key]
+            args << opts[key]
           end
         end
 
-        case
-          when File.directory?(@opts[:floppy])
+        if opts.has_key?(:floppy)
+          if File.directory?(opts[:floppy])
             args << '-fda'
-            args << "fat:floppy:#{@opts[:floppy]}"
+            args << "fat:floppy:#{opts[:floppy]}"
           else
-            Vmit.logger.warn "#{@opts[:floppy]} : only directories supported"
+            Vmit.logger.warn "#{opts[:floppy]} : only directories supported"
+          end
         end
 
-
+        # options that translate to
+        # -no-something if :something => false
+        [:reboot].each do |key|
+          if opts.has_key?(key)
+            # default is true
+            args << "-no-#{key}" if not opts[key]
+          end
+        end
 
         unless ENV['DISABLE_UUID']
           args << '-uuid'
-          args << "#{@opts[:uuid]}"
+          args << "#{opts[:uuid]}"
         end
 
         DRb.start_service nil, self
@@ -209,15 +228,15 @@ module Vmit
         Vmit.logger.debug "Vmit server listening at #{DRb.uri}"
 
         @network.auto do
-          Cheetah.run(*args)
+          begin
+            Cheetah.run(*args)
+          ensure
+            FileUtils.rm_f File.join(work_dir, 'qemu.pid')
+          end
         end
       rescue PidFile::DuplicateProcessError => e
         Vmit.logger.fatal "VM in '#{work_dir}'' is already running (#{e})"
-      rescue Exception => e
-        Vmit.logger.fatal e.message
-        e.backtrace.each do |bt_line|
-          Vmit.logger.debug "  #{bt_line}"
-        end
+        raise
       end
     end
 
