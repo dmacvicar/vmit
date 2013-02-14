@@ -89,8 +89,40 @@ module Vmit
     end
 
     # Boostraps a machine from a bootable ISO image
-    class BootstrapMethodIso
+    class MethodIso
+
+      attr_reader :vm
+
+      include MethodAutoYaST
+
       def initialize(vm, iso)
+        @vm = vm
+        @iso = iso
+      end
+
+      def execute
+        Dir.mktmpdir do |dir|
+          kernel = File.join(dir, 'linux')
+          File.open(kernel, 'w') do |stdout|
+            Cheetah.run('isoinfo', '-R', '-i', @iso, '-x', "/boot/x86_64/loader/linux", :stdout => stdout)
+          end
+
+          initrd = File.join(dir, 'initrd')
+          File.open(initrd, 'w') do |stdout|
+            Cheetah.run('isoinfo', '-R', '-i', @iso, '-x', "/boot/x86_64/loader/initrd", :stdout => stdout)
+          end
+
+          kernel_size = File.size?(kernel)
+          initrd_size = File.size?(initrd)
+
+          if ! (kernel_size && initrd_size)
+            Vmit.logger.error "Can't download kernel & initrd"
+            return 1
+          end
+
+          # , :append => "install=#{@repo_uri}"
+          execute_autoyast(:append => 'install=cdrom', :cdrom => @iso, :kernel => kernel, :initrd => initrd)
+        end
       end
     end
 
@@ -130,7 +162,10 @@ module Vmit
         vm.disk_image_init!(opts)
         vm.save_config!
 
-        method = Vmit::Bootstrap::MethodRepo.new(vm, repository)
+        method = case File.extname(repository)
+          when '.iso' then Vmit::Bootstrap::MethodIso.new(vm, repository)
+          else Vmit::Bootstrap::MethodRepo.new(vm, repository)
+        end
         method.execute
 
         Vmit.logger.info 'Creating snapshot of fresh system.'
