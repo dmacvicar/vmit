@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'open4'
 require 'progressbar'
+require 'digest/sha1'
 
 # Taken from Ruby on Rails
 class Hash
@@ -25,16 +26,33 @@ module Vmit
       ("%02x"%((rand 64).to_i*4|2))+(0..4).inject(""){|s,x|s+":%02x"%(rand 256).to_i}
     end
 
-    def self.kernel_version(bzimage)
+    def self.uname(bzimage)
       offset = 0
       File.open(bzimage) do |f|
         f.seek(0x20E)
         offset = f.read(2).unpack('s')[0]
         f.seek(offset + 0x200)
         ver = f.read(128).unpack('Z*')[0]
-        return ver.split(' ')[0]
+        return ver
       end
       nil
+    end
+
+    def self.kernel_version(bzimage)
+      uname(bzimage).split(' ')[0]
+    end
+
+    def self.sha1_file(filename)
+      sha1 = Digest::SHA1.new
+      File.open(filename) do |file|
+        buffer = ''
+        # Read the file 512 bytes at a time
+        while not file.eof
+          file.read(512, buffer)
+          sha1.update(buffer)
+        end
+      end
+      sha1.to_s
     end
 
     # @param [String] uri uri to download

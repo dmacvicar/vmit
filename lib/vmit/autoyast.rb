@@ -4,8 +4,21 @@ module Vmit
 
   class AutoYaST
 
+    attr_accessor :patterns
+    attr_accessor :packages
+
     def initialize
       @net_udev = {}
+      @patterns = []
+      @packages = []
+    end
+
+    def minimal_opensuse!
+      @patterns << 'base'
+    end
+
+    def minimal_sle!
+      @patterns << 'Minimal'
     end
 
     # Map a network device name and make
@@ -54,7 +67,9 @@ module Vmit
           }
           xml.software {
             xml.patterns('config:type' => 'list') {
-              xml.pattern 'Minimal'
+              @patterns.each do |pat|
+                xml.pattern pat
+              end
             }
           }
           xml.networking {

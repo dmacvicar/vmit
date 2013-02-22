@@ -184,6 +184,7 @@ module Vmit
 
         args = ['/usr/bin/qemu-kvm', '-boot', 'c',
             '-drive', "file=#{current_image},if=virtio",
+            #'-drive', "file=#{current_image}",
             '-m', "#{opts[:memory]}",
             #'-net', "nic,macaddr=#{opts[:mac_address]}",
             #'-net', "tap,script=#{ifup},downscript=#{ifdown}",
