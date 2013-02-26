@@ -1,4 +1,7 @@
 require 'vmit'
+require 'vmit/autoyast'
+require 'vmit/kickstart'
+require 'vmit/debian_preseed'
 
 module Vmit
 
@@ -11,6 +14,40 @@ module Vmit
     def self.bootstrapper_for(location)
       case
       when local_iso
+      end
+    end
+
+    module MethodDebianPreseed
+      # @param [Hash] args Arguments for 1st stage
+      def execute_autoinstall(args)
+        auto_install_args = {}
+        preseed = Vmit::DebianPreseed.new
+
+        Dir.mktmpdir do |floppy_dir|
+          qemu_args = {:floppy => floppy_dir,
+                      :append => "preseed/file=/floppy/preseed.cfg auto=true priority=critical",
+                      :reboot => false}
+          qemu_args.merge!(auto_install_args)
+          # transform duplicates into an array
+          qemu_args.merge!(args) do |key, oldv, newv|
+            case key
+              when :append then [oldv, newv].flatten
+              else newv
+            end
+          end
+
+          # Configure the autoinstallation profile to persist eth0
+          # for the current MAC address
+          # The interface will be setup with DHCP by default.
+          # TODO: make this more flexible in the future?
+          #autoyast.name_network_device(vm[:mac_address], 'eth0')
+          File.write(File.join(floppy_dir, 'preseed.cfg'), preseed.to_txt)
+          Vmit.logger.info "Preseed: 1st stage."
+          vm.run(qemu_args)
+          Vmit.logger.info "Preseed: 2st stage."
+          # 2nd stage
+          vm.run(:reboot => false)
+        end
       end
     end
 
@@ -139,6 +176,20 @@ module Vmit
       end
     end
 
+    module DebianMedia
+      include MethodDebianPreseed
+
+      def get_initrd
+        arch = Vmit::Bootstrap.arch.gsub(/x86_64/, 'amd64')
+        media.open("/main/installer-#{arch}/current/images/netboot/debian-installer/#{arch}/initrd.gz")
+      end
+
+      def get_kernel
+        arch = Vmit::Bootstrap.arch.gsub(/x86_64/, 'amd64')
+        media.open("/main/installer-#{arch}/current/images/netboot/debian-installer/#{arch}/linux")
+      end
+    end
+
     # Boostraps a vm from a SUSE repository
     class FromMedia
 
@@ -167,6 +218,7 @@ module Vmit
         media_handler = case location.to_s.downcase
           when /fedora|redhat/ then FedoraMedia
           when /suse/ then SUSEMedia
+          when /debian/ then DebianMedia
           else
             raise "Don't know how to bootstrap media #{location}"
         end
