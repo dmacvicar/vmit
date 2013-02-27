@@ -1,6 +1,7 @@
 require 'cheetah'
 require 'drb'
 require 'fileutils'
+require 'libvirt'
 require 'stringio'
 require 'yaml'
 
@@ -17,6 +18,10 @@ module Vmit
     }
     SWITCH = 'br0'
 
+    def name
+      work_dir.downcase.gsub(/[^a-z\s]/, '_')
+    end
+
     # Accessor to current options
     def [](key)
       @opts[key]
@@ -27,6 +32,12 @@ module Vmit
     end
 
     def initialize(work_dir)
+      @conn = Libvirt::open("qemu:///system")
+      if not @conn
+        raise 'Can\'t initialize hypervisor'
+      end
+      Vmit.logger.info @conn.capabilities
+
       @pidfile = PidFile.new(:piddir => work_dir, :pidfile => "vmit.pid")
       @work_dir = work_dir
 
@@ -168,6 +179,11 @@ module Vmit
     #   @option runtime_opts [String] :floppy Floppy (image or directory)
     def run(runtime_opts)
       Vmit.logger.info "Starting VM..."
+      puts self.to_libvirt_xml
+      puts @conn.inspect
+      domain = @conn.create_domain_xml(self.to_libvirt_xml)
+      #dom = conn.lookup_domain_xml("mydomain")
+      return
       # Don't overwrite @opts so that
       # run can be called various times
       opts = {}
@@ -248,17 +264,46 @@ module Vmit
 
     # Called by vmit-ifup
     def ifup(device)
-      Vmit.logger.info "  Bringing interface #{device} up"
-      Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'up'
-      @network.connect_interface(device)
+      #Vmit.logger.info "  Bringing interface #{device} up"
+      #Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'up'
+      #@network.connect_interface(device)
     end
 
     # Called by vmit-ifdown
     def ifdown(device)
-      Vmit.logger.info "  Bringing down interface #{device}"
-      Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'down'
-      @network.disconnect_interface(device)
+      #Vmit.logger.info "  Bringing down interface #{device}"
+      #Cheetah.run '/sbin/ifconfig', device, '0.0.0.0', 'down'
+      #@network.disconnect_interface(device)
     end
+
+    def to_libvirt_xml
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.domain(:type => 'kvm') {
+          xml.name self.name
+          xml.uuid self[:uuid]
+          match = /([0-9+])([^0-9+])/.match self[:memory]
+          xml.memory(match[1], :unit => match[2])
+          xml.vcpu 1
+          xml.os {
+            xml.type('hvm', :arch => 'x86_64')
+          }
+          xml.devices {
+            xml.emulator '/usr/bin/qemu-kvm'
+            xml.disk(:type => 'file', :device => 'disk') {
+              xml.driver(:name => 'qemu', :type => 'qcow2')
+              xml.source(:file => self.current_image)
+              xml.target(:dev => 'sda', :bus => 'virtio')
+            }
+            xml.graphics(:type => 'sdl', :display => ':0')
+            xml.interface(:type => 'network') {
+              xml.source(:network => 'default')
+            }
+          }
+        }
+      end
+      builder.to_xml
+    end
+
   end
 
 end
