@@ -58,7 +58,7 @@ module Vmit
         kickstart = Vmit::Kickstart.new
 
         case media
-          when Vmit::VFS::HTTP
+          when Vmit::VFS::URI
             kickstart.install = location
           when Vmit::VFS::ISO
             kickstart.install = :cdrom
