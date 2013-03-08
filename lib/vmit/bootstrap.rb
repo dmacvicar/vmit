@@ -216,7 +216,7 @@ module Vmit
         # location distro type. I could uname the kernel, but
         # I need the type to know the location.
         media_handler = case location.to_s.downcase
-          when /fedora|redhat/ then FedoraMedia
+          when /fedora|redhat|centos/ then FedoraMedia
           when /suse/ then SUSEMedia
           when /debian/ then DebianMedia
           else
