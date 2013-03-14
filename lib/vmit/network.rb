@@ -66,6 +66,7 @@ module Vmit
     # reimplemented from RefcountedResource
     def on_up
       Vmit.logger.info "Bringing up bridged network #{@address.to_string} on #{@brdevice}"
+      Vmit.logger.info "  `-> managed by #{lockfile_path}"
       # setup bridge
       # may be use 'ip', 'link', 'show', 'dev', devname to check if
       # the bridge is there?
@@ -91,6 +92,8 @@ module Vmit
 
     # reimplemented from RefcountedResource
     def on_down
+      Vmit.logger.info "Bringing down bridged network #{@address.to_string} on #{@brdevice}"
+      Vmit.logger.info "  `-> managed by #{lockfile_path}"
       Cheetah.run '/sbin/ifconfig', @brdevice, 'down'
       Cheetah.run '/sbin/brctl', 'delbr', @brdevice
       Cheetah.run 'iptables', '-t', 'nat', '-D', 'POSTROUTING', '-s', @address.network.to_string,
