@@ -79,17 +79,9 @@ module Vmit
             end
           end
 
-          # Configure the autoinstallation profile to persist eth0
-          # for the current MAC address
-          # The interface will be setup with DHCP by default.
-          # TODO: make this more flexible in the future?
-          #autoyast.name_network_device(vm[:mac_address], 'eth0')
           File.write(File.join(floppy_dir, 'ks.cfg'), kickstart.to_ks_script)
           Vmit.logger.info "Kickstart: 1st stage."
           vm.run(qemu_args)
-          Vmit.logger.info "Kickstart: 2st stage."
-          # 2nd stage
-          vm.run(:reboot => false)
         end
       end
     end
