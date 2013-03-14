@@ -72,26 +72,15 @@ module Vmit
               end
             }
           }
+          # SLE 11 can do without this basic partitioning but
+          # SLE 10 is not that smart.
+          xml.partitioning('config:type' => 'list') {
+            xml.drive {
+              xml.use 'all'
+            }
+          }
           xml.networking {
             xml.keep_install_network(true, 'config:type' => 'boolean')
-=begin
-            @net_udev.each do |mac, devname|
-              xml.send(:'net-udev', 'config:type' => 'list') {
-                xml.rule 'ATTR{address}'
-                xml.value mac
-                xml.name devname
-              }
-            end
-            xml.interfaces('config:type' => 'list') {
-              @net_udev.each do |mac, devname|
-                xml.interface {
-                  xml.bootproto 'dhcp'
-                  xml.device devname
-                  xml.startmode 'onboot'
-                }
-              end
-            }
-=end
           }
         }
       end
