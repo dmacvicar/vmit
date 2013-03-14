@@ -199,18 +199,33 @@ module Vmit
       end
 
       begin
+        # HACK, will be replaced by a better config system
+        use_virtio = ! File.exist?(File.join(work_dir, '.disable-virtio'))
+
         ifup = File.expand_path(File.join(BINDIR, 'vmit-ifup'))
         ifdown = File.expand_path(File.join(BINDIR, 'vmit-ifdown'))
 
         args = ['/usr/bin/qemu-kvm', '-boot', 'c',
-            '-drive', "file=#{current_image},if=virtio",
-            #'-drive', "file=#{current_image}",
             '-m', "#{opts[:memory]}",
-            #'-net', "nic,macaddr=#{opts[:mac_address]}",
-            #'-net', "tap,script=#{ifup},downscript=#{ifdown}",
-            '-netdev', "type=tap,script=#{ifup},downscript=#{ifdown},id=vnet0",
-            '-device', "virtio-net-pci,netdev=vnet0,mac=#{opts[:mac_address]}",
             '-pidfile', File.join(work_dir, 'qemu.pid')]
+
+        if use_virtio
+          args << '-drive'
+          args << "file=#{current_image},if=virtio"
+
+          args << '-netdev'
+          args << "type=tap,script=#{ifup},downscript=#{ifdown},id=vnet0"
+          args << '-device'
+          args << "virtio-net-pci,netdev=vnet0,mac=#{opts[:mac_address]}"
+        else
+          args << '-drive'
+          args << "file=#{current_image}"
+
+          args << '-net'
+          args << "nic,macaddr=#{opts[:mac_address]}"
+          args << '-net'
+          args << "tap,script=#{ifup},downscript=#{ifdown}"
+        end
 
         # advanced options, mostly to be used by plugins
         [:cdrom, :kernel, :initrd, :append].each do |key|
