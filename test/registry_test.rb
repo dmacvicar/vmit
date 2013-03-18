@@ -30,6 +30,22 @@ end
 
 class Registry_test < Test::Unit::TestCase
 
+  def test_basic_yaml
+    dir = File.join(File.dirname(__FILE__), "data/registry.yml")
+    reg = Vmit::YamlRegistry.new(dir)
+
+    assert_equal '2G', reg[:memory]
+    assert_equal '7a:7f:c7:dd:5f:bb', reg[:mac_address]
+    assert_equal 'Hello', reg[:sym_key]
+    keys = reg.keys
+    assert_equal [], [:memory, :mac_address, :sym_key] - keys
+
+    reg.each do |k,v|
+      assert keys.include?(k)
+      assert_equal reg[k], v
+    end
+  end
+
   def test_basic_existing_registry
     dir = File.join(File.dirname(__FILE__), "data/registry")
     reg = Vmit::FilesystemRegistry.new(dir)
