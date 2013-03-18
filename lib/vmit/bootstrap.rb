@@ -1,3 +1,23 @@
+#
+# Copyright (C) 2013 Duncan Mac-Vicar P. <dmacvicar@suse.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 require 'vmit'
 require 'vmit/autoyast'
 require 'vmit/kickstart'
@@ -58,7 +78,7 @@ module Vmit
         kickstart = Vmit::Kickstart.new
 
         case media
-          when Vmit::VFS::HTTP
+          when Vmit::VFS::URI
             kickstart.install = location
           when Vmit::VFS::ISO
             kickstart.install = :cdrom
@@ -79,17 +99,9 @@ module Vmit
             end
           end
 
-          # Configure the autoinstallation profile to persist eth0
-          # for the current MAC address
-          # The interface will be setup with DHCP by default.
-          # TODO: make this more flexible in the future?
-          #autoyast.name_network_device(vm[:mac_address], 'eth0')
           File.write(File.join(floppy_dir, 'ks.cfg'), kickstart.to_ks_script)
           Vmit.logger.info "Kickstart: 1st stage."
           vm.run(qemu_args)
-          Vmit.logger.info "Kickstart: 2st stage."
-          # 2nd stage
-          vm.run(:reboot => false)
         end
       end
     end
@@ -216,7 +228,7 @@ module Vmit
         # location distro type. I could uname the kernel, but
         # I need the type to know the location.
         media_handler = case location.to_s.downcase
-          when /fedora|redhat/ then FedoraMedia
+          when /fedora|redhat|centos/ then FedoraMedia
           when /suse/ then SUSEMedia
           when /debian/ then DebianMedia
           else

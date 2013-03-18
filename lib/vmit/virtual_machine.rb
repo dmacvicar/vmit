@@ -1,3 +1,23 @@
+#
+# Copyright (C) 2013 Duncan Mac-Vicar P. <dmacvicar@suse.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 require 'cheetah'
 require 'drb'
 require 'fileutils'
@@ -195,18 +215,33 @@ module Vmit
       end
 
       begin
+        # HACK, will be replaced by a better config system
+        use_virtio = ! File.exist?(File.join(work_dir, '.disable-virtio'))
+
         ifup = File.expand_path(File.join(BINDIR, 'vmit-ifup'))
         ifdown = File.expand_path(File.join(BINDIR, 'vmit-ifdown'))
 
         args = ['/usr/bin/qemu-kvm', '-boot', 'c',
-            '-drive', "file=#{current_image},if=virtio",
-            #'-drive', "file=#{current_image}",
             '-m', "#{opts[:memory]}",
-            #'-net', "nic,macaddr=#{opts[:mac_address]}",
-            #'-net', "tap,script=#{ifup},downscript=#{ifdown}",
-            '-netdev', "type=tap,script=#{ifup},downscript=#{ifdown},id=vnet0",
-            '-device', "virtio-net-pci,netdev=vnet0,mac=#{opts[:mac_address]}",
             '-pidfile', File.join(work_dir, 'qemu.pid')]
+
+        if use_virtio
+          args << '-drive'
+          args << "file=#{current_image},if=virtio"
+
+          args << '-netdev'
+          args << "type=tap,script=#{ifup},downscript=#{ifdown},id=vnet0"
+          args << '-device'
+          args << "virtio-net-pci,netdev=vnet0,mac=#{opts[:mac_address]}"
+        else
+          args << '-drive'
+          args << "file=#{current_image}"
+
+          args << '-net'
+          args << "nic,macaddr=#{opts[:mac_address]}"
+          args << '-net'
+          args << "tap,script=#{ifup},downscript=#{ifdown}"
+        end
 
         # advanced options, mostly to be used by plugins
         [:cdrom, :kernel, :initrd, :append].each do |key|

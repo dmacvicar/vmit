@@ -1,6 +1,8 @@
 
 = Vmit
 
+* http://guthub.com/dmacvicar/vmit
+
 == Introduction
 
 Vmit is a simple tool to manage virtual kvm machines for development/testing.
@@ -108,8 +110,10 @@ And then in config.yml
 
     :network: myalias
 
+== Authors
 
+* Duncan Mac-Vicar P. <dmacvicar@suse.de>
 
+== License
 
-You can create global
-
+See MIT-LICENSE file.
