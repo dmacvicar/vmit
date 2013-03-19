@@ -122,6 +122,7 @@ module Vmit
         end
 
         Dir.mktmpdir do |floppy_dir|
+          FileUtils.chmod_R 0755, floppy_dir
           qemu_args = {:floppy => floppy_dir,
                       :append => "autoyast=device://fd0/autoinst.xml",
                       :reboot => false}
@@ -156,10 +157,16 @@ module Vmit
           #autoyast.name_network_device(vm[:mac_address], 'eth0')
           File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
           Vmit.logger.info "AutoYaST: 1st stage."
-          vm.run(qemu_args)
+
+          vm = Vmit::LibvirtVM.new(workspace, qemu_args)
+          vm.assert_down
+          vm.up
+          vm.vnc
+
           Vmit.logger.info "AutoYaST: 2st stage."
           # 2nd stage
-          vm.run(:reboot => false)
+          vm = Vmit::LibvirtVM.new(workspace, :reboot => false)
+          vm.vnc
         end
       end
     end
@@ -205,7 +212,7 @@ module Vmit
     # Boostraps a vm from a SUSE repository
     class FromMedia
 
-      attr_reader :vm
+      attr_reader :workspace
       attr_reader :media
       attr_reader :location
 
@@ -219,9 +226,9 @@ module Vmit
             File.extname(location.to_s) == '')
       end
 
-      def initialize(vm, location)
+      def initialize(workspace, location)
         @location = location
-        @vm = vm
+        @workspace = workspace
         @media = Vmit::VFS.from(location)
 
         # TODO FIXME we need a clever way to detect the

@@ -50,15 +50,14 @@ module Vmit
 
       def execute
         Vmit.logger.info 'Starting bootstrap'
-        curr_dir = File.expand_path(Dir.pwd)
-        vm = Vmit::VirtualMachine.new(curr_dir)
+        workspace = Vmit::Workspace.from_pwd
 
         Vmit.logger.info '  Deleting old images'
         FileUtils.rm_f(Dir.glob('*.qcow2'))
         opts = {}
         opts[:disk_size] = disk_size if disk_size
-        vm.disk_image_init!(opts)
-        vm.save_config!
+        workspace.disk_image_init!(opts)
+        workspace.save_config!
 
         uri = URI.parse(location)
         bootstrap = [Vmit::Bootstrap::FromImage,
@@ -67,13 +66,13 @@ module Vmit
         end
 
         if bootstrap
-          bootstrap.new(vm, uri).execute
+          bootstrap.new(workspace, uri).execute
         else
           raise "Can't bootstrap from #{location}"
         end
 
         Vmit.logger.info 'Creating snapshot of fresh system.'
-        vm.disk_snapshot!
+        workspace.disk_snapshot!
         Vmit.logger.info 'Bootstraping done. Call vmit run to start your system.'
       end
 

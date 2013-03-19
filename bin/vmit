@@ -2,6 +2,7 @@
 $: << File.join(File.dirname(__FILE__), "..", "lib")
 require 'rubygems'
 require 'active_support/inflector'
+require 'cheetah'
 require 'clamp'
 require 'vmit'
 
@@ -41,7 +42,7 @@ module Vmit
 
     def execute
       options = {}
-      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+      vm = Vmit::Workspace.new(File.expand_path(Dir.pwd))
 
       OPTION_KEYS.each do |k|
         val = self.send(k)
@@ -57,7 +58,7 @@ module Vmit
 
   end
 
-  class RunCommand < BaseVmCommand
+  class UpCommand < BaseVmCommand
 
     OPTION_KEYS = [:memory, :cdrom]
 
@@ -70,23 +71,81 @@ module Vmit
 
     def execute
       options = {}
-      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
+      workspace = Vmit::Workspace.new(File.expand_path(Dir.pwd))
 
       OPTION_KEYS.each do |k|
         val = self.send(k)
         options[k] = val if val
       end
 
-      vm.run(options)
+      vm = Vmit::LibvirtVM.new(workspace, options)
+      vm.up
     end
 
+  end
+
+  class VncCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      vm.vnc
+    end
+  end
+
+  class SshCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      vm.assert_up
+
+      while not vm.ip_address
+        sleep(1)
+        Vmit.logger.info("Waiting for ip address...")
+      end
+      Vmit.logger.info("ip address is #{vm.ip_address}")
+      system("ssh root@#{vm.ip_address}")
+    end
+  end
+
+  class StatusCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      st, reason = vm.state
+
+      puts "VM is #{st}...(#{reason})"
+      if vm.ip_address
+        puts "  #{vm.ip_address}"
+      end
+
+    end
+  end
+
+  class RebootCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      vm.reboot
+    end
+  end
+
+  class ShutdownCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      vm.shutdown
+    end
+  end
+
+  class DestroyCommand < Clamp::Command
+    def execute
+      vm = LibvirtVM.from_pwd
+      vm.destroy
+    end
   end
 
   class DiskSnapshotCommand < Clamp::Command
 
     def execute
-      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
-      vm.disk_snapshot!
+      vm = LibvirtVM.from_pwd
+      vm.assert_down
+
+      vm.workspace.disk_snapshot!
     end
 
   end
@@ -94,8 +153,8 @@ module Vmit
   class DiskImagesCommand < Clamp::Command
 
     def execute
-      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
-      puts vm.disk_images.last
+      vm = LibvirtVM.from_pwd
+      puts vm.workspace.disk_images.last
     end
 
   end
@@ -103,8 +162,10 @@ module Vmit
   class DiskRollbackCommand < Clamp::Command
 
     def execute
-      vm = Vmit::VirtualMachine.new(File.expand_path(Dir.pwd))
-      vm.disk_rollback!
+      vm = LibvirtVM.from_pwd
+      vm.assert_down
+
+      vm.workspace.disk_rollback!
     end
 
   end
@@ -112,10 +173,16 @@ module Vmit
   class MainCommand < Clamp::Command
 
     subcommand "init", "Initialize the vm", InitCommand
-    subcommand "run", "Run the vm", RunCommand
+    subcommand "up", "Run the vm", UpCommand
+    subcommand "status", "Show VM status", StatusCommand
+    subcommand "shutdown", "Shutdown the VM", ShutdownCommand
+    subcommand "reboot", "Reboot the VM", RebootCommand
+    subcommand "destroy", "Destroy the VM", DestroyCommand
     subcommand "disk-images", "List disk images", DiskImagesCommand
     subcommand "disk-snapshot", "Creates a new disk-snapshot", DiskSnapshotCommand
     subcommand "disk-rollback", "Rollbacks to previous disk snapshot", DiskRollbackCommand
+    subcommand "ssh", "SSH into the machine", SshCommand
+    subcommand "vnc", "VNC into the machine", VncCommand
 
     # Add commands offered via plugins
     Vmit.plugins.each do |plugin|
@@ -126,7 +193,6 @@ module Vmit
       end
     end
   end
-
 
 end
 
