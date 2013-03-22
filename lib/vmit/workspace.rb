@@ -23,6 +23,10 @@ require 'drb'
 require 'fileutils'
 require 'stringio'
 require 'yaml'
+require 'confstruct'
+# confstruct uses autoload, Deferred is
+# not defined until you use Configuration
+require 'confstruct/configuration'
 
 require 'vmit/utils'
 
@@ -32,8 +36,10 @@ module Vmit
 
     attr_accessor :work_dir
 
-    VM_DEFAULTS = {
+    VM_GLOBAL_DEFAULTS = {
       :memory => '1G',
+      :kernel_cmdline => [],
+      :virtio => true
     }
     SWITCH = 'br0'
 
@@ -47,7 +53,7 @@ module Vmit
 
     # Accessor to current options
     def [](key)
-      @opts[key]
+      @config[key]
     end
 
     def config_file
@@ -55,33 +61,17 @@ module Vmit
     end
 
     def initialize(work_dir)
+      @config = Confstruct::Configuration.new(VM_GLOBAL_DEFAULTS.merge({
+        :uuid => File.read("/proc/sys/kernel/random/uuid").strip,
+        :mac_address => Vmit::Utils.random_mac_address
+        }))
       @work_dir = work_dir
 
-      @opts = {}
-      @opts.merge!(VM_DEFAULTS)
-
       if File.exist?(config_file)
-        @opts.merge!(YAML::load(File.open(config_file)))
+        @config.configure(YAML::load(File.open(config_file)))
       end
 
-      # By default the following keys are useful to be
-      # generated if they don't exist and then use the
-      # same in the future UNLESS they are
-      # overriden with vmit run
-      if not @opts.has_key?(:mac_address)
-        @opts[:mac_address] = Vmit::Utils.random_mac_address
-      end
-
-      if not @opts.has_key?(:uuid)
-        @opts[:uuid] = File.read("/proc/sys/kernel/random/uuid").strip
-      end
-
-      @network = if @opts.has_key?(:network)
-        Network.create(@opts[:network])
-      else
-        Vmit.logger.info 'No network selected. Using default.'
-        Network.default
-      end
+      @network = config.lookup!('network', 'default')
       Vmit.logger.info "Network: #{@network}"
     end
 
@@ -109,7 +99,7 @@ module Vmit
     # @param [Hash] opts options for the disk shift
     # @option opts [String] :disk_size Disk size. Only used for image creation
     def disk_image_shift!(opts={})
-      runtime_opts = DISK_INIT_DEFAULTS.merge(opts)
+      disk_config = Confstruct::Configuration.new(DISK_INIT_DEFAULTS)
 
       file_name = File.join(work_dir, "sda-#{Time.now.to_i}.qcow2")
       images = disk_images
@@ -123,9 +113,10 @@ module Vmit
         args << '-b'
         args << images.last
       end
-      args << file_name
+
+      args << File.join(work_dir, file_name)
       if images.empty?
-        args << runtime_opts[:disk_size]
+        args << disk_config.disk_size
       end
 
       Vmit.logger.info "Shifted image. Current is '#{file_name}'."
@@ -154,19 +145,19 @@ module Vmit
     end
 
     def options
-      @opts
+      raise 'Workspace#options is deprecated.'
     end
 
     # @return [Hash] Config of the virtual machine
     #   This is all options plus the defaults
     def config
-      VM_DEFAULTS.merge(@opts)
+      @config
     end
 
     # @return [Hash] config that differs from default
     #  and therefore relevant to be persisted in config.yml
     def relevant_config
-      config.diff(VM_DEFAULTS)
+      config.diff(config.default_values)
     end
 
     # Saves the configuration in config.yml

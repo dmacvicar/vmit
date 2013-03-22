@@ -1,3 +1,4 @@
+require 'confstruct'
 require 'libvirt'
 require 'nokogiri'
 require 'vmit'
@@ -7,6 +8,7 @@ module Vmit
   class LibvirtVM
 
     attr_reader :workspace
+    attr_reader :config
     attr_reader :conn
 
     def self.from_pwd(opts={})
@@ -19,8 +21,8 @@ module Vmit
     #   the virtual machine options
     def initialize(workspace, opts={})
       @workspace = workspace
-      @runtime_opts = {}
-      @runtime_opts.merge!(opts)
+      @config = Confstruct::Configuration.new(@workspace.config)
+      @config.configure(opts)
 
       @conn = ::Libvirt::open("qemu:///system")
       if not @conn
@@ -35,6 +37,11 @@ module Vmit
     end
 
     def up
+      unless down?
+        Vmit.logger.error "#{workspace.name} is already up. Run 'vmit ssh' or 'vmit vnc' to access it."
+        return
+      end
+
       Vmit.logger.debug "\n#{conn.capabilities}"
       Vmit.logger.info "Starting VM..."
 
@@ -45,16 +52,11 @@ module Vmit
       end
       Vmit.logger.debug "\n#{self.to_libvirt_xml}"
 
-      unless down?
-        Vmit.logger.error "#{workspace.name} is already up. Run 'vmit ssh' or 'vmit vnc' to access it."
-        return
-      end
-
+      puts domain.inspect
+      domain.destroy if domain
       if domain.nil?
         conn.create_domain_xml(self.to_libvirt_xml)
       end
-
-      domain.resume
     end
 
     def state
@@ -104,17 +106,52 @@ module Vmit
     end
 
     def destroy
-       if domain
+      if domain
         domain.destroy
-        domain.free
       end
+    end
+
+    # Waits until the machine is shutdown
+    # executing the passed block.
+    #
+    # If the machine is shutdown, the
+    # block will be killed. If the block
+    # exits, the machine will be stopped
+    # immediately (domain destroyed)
+    #
+    # @example
+    #   vm.wait_until_shutdown! do
+    #     vm.vnc
+    #   end
+    #
+    def wait_until_shutdown!(&block)
+      chars = %w{ | / - \\ }
+      thread = Thread.new(&block)
+      thread.abort_on_exception = true
+
+      Vmit.logger.info "Waiting for machine..."
+      while true
+        print chars[0]
+
+        if down?
+          Thread.kill(thread)
+          return
+        end
+        if not thread.alive?
+          domain.destroy
+        end
+        sleep(1)
+        print "\b"
+        chars.push chars.shift
+      end
+
     end
 
     def ip_address
       File.open('/var/lib/libvirt/dnsmasq/default.leases') do |f|
         f.each_line do |line|
           parts = line.split(' ')
-          if parts[1] == self[:mac_address]
+          if parts[1] == config.mac_address
             return parts[2]
           end
         end
@@ -150,25 +187,27 @@ module Vmit
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.domain(:type => 'kvm') {
           xml.name workspace.name
-          xml.uuid self[:uuid]
-          match = /([0-9+])([^0-9+])/.match self[:memory]
+          xml.uuid config.uuid
+          match = /([0-9+])([^0-9+])/.match config.memory
           xml.memory(match[1], :unit => match[2])
           xml.vcpu 1
           xml.os {
             xml.type('hvm', :arch => 'x86_64')
-            if self[:kernel]
-              xml.kernel self[:kernel]
-              xml.cmdline self[:append] if self[:append]
+            if config.lookup!('kernel')
+              xml.kernel config.kernel
+              if config.lookup!('kernel_cmdline')
+                xml.cmdline config.kernel_cmdline.join(' ')
+              end
             end
-            xml.initrd self[:initrd] if self[:initrd]
-            xml.boot(:dev => 'cdrom') if self[:cdrom]
+            xml.initrd config.initrd if config.lookup!('initrd')
+            xml.boot(:dev => 'cdrom') if config.lookup!('cdrom')
           }
           # for shutdown to work
           xml.features {
             xml.acpi
           }
           #xml.on_poweroff 'destroy'
-          if not self[:reboot]
+          unless config.lookup!('reboot').nil? || config.lookup!('reboot')
             xml.on_reboot 'destroy'
           end
           #xml.on_crash 'destroy'
@@ -179,18 +218,22 @@ module Vmit
             xml.disk(:type => 'file', :device => 'disk') {
               xml.driver(:name => 'qemu', :type => 'qcow2')
               xml.source(:file => workspace.current_image)
-              xml.target(:dev => 'sda', :bus => 'virtio')
+              if config.virtio
+                xml.target(:dev => 'sda', :bus => 'virtio')
+              else
+                xml.target(:dev => 'sda', :bus => 'ide')
+              end
             }
-            if self[:cdrom]
+            if config.lookup!('cdrom')
               xml.disk(:type => 'file', :device => 'cdrom') {
-                xml.source(:file => self[:cdrom])
+                xml.source(:file => config.cdrom)
                 xml.target(:dev => 'hdc')
                 xml.readonly
               }
             end
-            if self[:floppy]
+            if config.lookup!('floppy')
               xml.disk(:type => 'dir', :device => 'floppy') {
-                xml.source(:dir => self[:floppy])
+                xml.source(:dir => config.floppy)
                 xml.target(:dev => 'fda')
                 xml.readonly
               }
@@ -198,7 +241,7 @@ module Vmit
             xml.graphics(:type => 'vnc', :autoport => 'yes')
             xml.interface(:type => 'network') {
               xml.source(:network => 'default')
-              xml.mac(:address => self[:mac_address])
+              xml.mac(:address => config.mac_address)
             }
           }
         }

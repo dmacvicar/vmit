@@ -23,6 +23,8 @@ require 'vmit/autoyast'
 require 'vmit/kickstart'
 require 'vmit/debian_preseed'
 
+require 'socket'
+
 module Vmit
 
   module Bootstrap
@@ -31,42 +33,31 @@ module Vmit
       Cheetah.run('arch', :stdout => :capture).strip
     end
 
-    def self.bootstrapper_for(location)
-      case
-      when local_iso
-      end
-    end
-
     module MethodDebianPreseed
       # @param [Hash] args Arguments for 1st stage
       def execute_autoinstall(args)
-        auto_install_args = {}
+        vm = Vmit::LibvirtVM.new(workspace)
         preseed = Vmit::DebianPreseed.new
+        vm.config.push!
+        begin
+          vm.config.configure(args)
+          Dir.mktmpdir do |floppy_dir|
+            FileUtils.chmod_R 0755, floppy_dir
+            vm.config.floppy = floppy_dir
+            vm.config.add_kernel_cmdline!('preseed/file=/floppy/preseed.cfg')
+            vm.config.add_kernel_cmdline!('auto=true')
+            vm.config.add_kernel_cmdline!('priority=critical')
+            vm.config.reboot = false
 
-        Dir.mktmpdir do |floppy_dir|
-          qemu_args = {:floppy => floppy_dir,
-                      :append => "preseed/file=/floppy/preseed.cfg auto=true priority=critical",
-                      :reboot => false}
-          qemu_args.merge!(auto_install_args)
-          # transform duplicates into an array
-          qemu_args.merge!(args) do |key, oldv, newv|
-            case key
-              when :append then [oldv, newv].flatten
-              else newv
+            File.write(File.join(floppy_dir, 'preseed.cfg'), preseed.to_txt)
+            Vmit.logger.info "Preseed: 1st stage."
+            vm.up
+            vm.wait_until_shutdown! do
+              vm.vnc
             end
           end
-
-          # Configure the autoinstallation profile to persist eth0
-          # for the current MAC address
-          # The interface will be setup with DHCP by default.
-          # TODO: make this more flexible in the future?
-          #autoyast.name_network_device(vm[:mac_address], 'eth0')
-          File.write(File.join(floppy_dir, 'preseed.cfg'), preseed.to_txt)
-          Vmit.logger.info "Preseed: 1st stage."
-          vm.run(qemu_args)
-          Vmit.logger.info "Preseed: 2st stage."
-          # 2nd stage
-          vm.run(:reboot => false)
+        ensure
+          vm.config.pop!
         end
       end
     end
@@ -74,34 +65,37 @@ module Vmit
     module MethodKickstart
       # @param [Hash] args Arguments for 1st stage
       def execute_autoinstall(args)
-        auto_install_args = {}
+        vm = Vmit::LibvirtVM.new(workspace)
         kickstart = Vmit::Kickstart.new
+        vm.config.push!
+        begin
+          vm.config.configure(args)
 
-        case media
-          when Vmit::VFS::URI
-            kickstart.install = location
-          when Vmit::VFS::ISO
-            kickstart.install = :cdrom
-            auto_install_args.merge!(:cdrom => location.to_s)
-          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
-        end
-
-        Dir.mktmpdir do |floppy_dir|
-          qemu_args = {:floppy => floppy_dir,
-                      :append => "ks=floppy repo=#{kickstart.install}",
-                      :reboot => false}
-          qemu_args.merge!(auto_install_args)
-          # transform duplicates into an array
-          qemu_args.merge!(args) do |key, oldv, newv|
-            case key
-              when :append then [oldv, newv].flatten
-              else newv
-            end
+          case media
+            when Vmit::VFS::URI
+              kickstart.install = location
+            when Vmit::VFS::ISO
+              kickstart.install = :cdrom
+              vm.config.configure(:cdrom => location.to_s)
+            else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
           end
 
-          File.write(File.join(floppy_dir, 'ks.cfg'), kickstart.to_ks_script)
-          Vmit.logger.info "Kickstart: 1st stage."
-          vm.run(qemu_args)
+          Dir.mktmpdir do |floppy_dir|
+            FileUtils.chmod_R 0755, floppy_dir
+            vm.config.floppy = floppy_dir
+            vm.config.add_kernel_cmdline!('ks=floppy')
+            vm.config.add_kernel_cmdline!("repo=#{kickstart.install}")
+            vm.config.reboot = false
+
+            File.write(File.join(floppy_dir, 'ks.cfg'), kickstart.to_ks_script)
+            Vmit.logger.info "Kickstart: 1st stage."
+            vm.up
+            vm.wait_until_shutdown! do
+              vm.vnc
+            end
+          end
+        ensure
+          vm.config.pop!
         end
       end
     end
@@ -109,64 +103,65 @@ module Vmit
     module MethodAutoYaST
       # @param [Hash] args Arguments for 1st stage
       def execute_autoinstall(args)
-        auto_install_args = {}
-        auto_install_args.merge!(args)
-        kernel_append_arg = case media
-          when Vmit::VFS::URI then "install=#{location}"
-          when Vmit::VFS::ISO then 'install=cdrom'
-          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
-        end
-        auto_install_args.merge!(:append => kernel_append_arg)
-        if media.is_a?(Vmit::VFS::ISO)
-          auto_install_args.merge!(:cdrom => location.to_s)
-        end
+        vm = Vmit::LibvirtVM.new(workspace)
+        vm.config.push!
+        begin
+          vm.config.configure(args)
 
-        Dir.mktmpdir do |floppy_dir|
-          FileUtils.chmod_R 0755, floppy_dir
-          qemu_args = {:floppy => floppy_dir,
-                      :append => "autoyast=device://fd0/autoinst.xml",
-                      :reboot => false}
-          # transform duplicates into an array
-          qemu_args.merge!(auto_install_args) do |key, oldv, newv|
-            case key
-              when :append then [oldv, newv].flatten
-              else newv
-            end
+          kernel_append_arg = case media
+            when Vmit::VFS::URI then "install=#{location}"
+            when Vmit::VFS::ISO then 'install=cdrom'
+            else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+          end
+          vm.config.add_kernel_cmdline!(kernel_append_arg)
+
+          if media.is_a?(Vmit::VFS::ISO)
+            vm.config.cdrom = location.to_s
           end
 
-          autoyast = Vmit::AutoYaST.new
+          Dir.mktmpdir do |floppy_dir|
+            FileUtils.chmod_R 0755, floppy_dir
+            vm.config.floppy = floppy_dir
+            vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
+            vm.config.reboot = false
 
-          # WTF SLE and openSUSE have different
-          # base pattern names
-          media.open('/content') do |content_file|
-            content_file.each_line do |line|
-              case line
-                when /^DISTRIBUTION (.+)$/
-                  case $1
-                    when /SUSE_SLE/ then autoyast.minimal_sle!
-                    when /openSUSE/ then autoyast.minimal_opensuse!
-                  end
-              end
+            autoyast = Vmit::AutoYaST.new
+
+            # WTF SLE and openSUSE have different
+            # base pattern names
+            #media.open('/content') do |content_file|
+            #  content_file.each_line do |line|
+            #    case line
+            #      when /^DISTRIBUTION (.+)$/
+            #        case $1
+            #          when /SUSE_SLE/ then autoyast.minimal_sle!
+            #          when /openSUSE/ then autoyast.minimal_opensuse!
+            #        end
+            #    end
+            #  end
+            #end
+
+            File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
+            Vmit.logger.info "AutoYaST: 1st stage."
+            puts vm.config.inspect
+            vm.up
+            vm.wait_until_shutdown! do
+              vm.vnc
             end
+            vm.config.pop!
+
+            Vmit.logger.info "AutoYaST: 2st stage."
+            # 2nd stage
+            vm.config.push!
+            vm.config.configure(:reboot => false)
+            vm.up
+            vm.wait_until_shutdown! do
+              vm.vnc
+            end
+
           end
-
-          # Configure the autoinstallation profile to persist eth0
-          # for the current MAC address
-          # The interface will be setup with DHCP by default.
-          # TODO: make this more flexible in the future?
-          #autoyast.name_network_device(vm[:mac_address], 'eth0')
-          File.write(File.join(floppy_dir, 'autoinst.xml'), autoyast.to_xml)
-          Vmit.logger.info "AutoYaST: 1st stage."
-
-          vm = Vmit::LibvirtVM.new(workspace, qemu_args)
-          vm.assert_down
-          vm.up
-          vm.vnc
-
-          Vmit.logger.info "AutoYaST: 2st stage."
-          # 2nd stage
-          vm = Vmit::LibvirtVM.new(workspace, :reboot => false)
-          vm.vnc
+        ensure
+          vm.config.pop!
         end
       end
     end
@@ -272,7 +267,7 @@ module Vmit
       end
 
       def execute
-        Vmit.logger.info "From media!!!"
+        raise NotImplementedError
       end
     end
 

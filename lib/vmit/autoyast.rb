@@ -29,16 +29,19 @@ module Vmit
 
     def initialize
       @net_udev = {}
-      @patterns = []
-      @packages = []
+      base!
     end
 
-    def minimal_opensuse!
-      @patterns << 'base'
+    def base!
+      @patterns = ['base']
+      @packages = ['zypper', 'openssh']
     end
 
-    def minimal_sle!
+    # minimal installation
+    # does not work with openSUSE
+    def minimal!
       @patterns << 'Minimal'
+      @packages = ['zypper', 'openssh']
     end
 
     # Map a network device name and make
