@@ -21,14 +21,42 @@
 require 'vmit'
 require 'erb'
 
+
 module Vmit
 
-  class Kickstart
+  class Kickstart < UnattendedInstall
 
-    attr_accessor :install
+    def execute_autoinstall(vm, args)
+      vm.config.push!
+      begin
+        vm.config.configure(args)
+        media = Vmit::VFS.from(location)
+        case media
+          when Vmit::VFS::URI
+            kickstart.install = location
+          when Vmit::VFS::ISO
+            self.install = :cdrom
+            vm.config.configure(:cdrom => location.to_s)
+          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+        end
 
-    # ks=floppy
-    def initialize
+        Dir.mktmpdir do |floppy_dir|
+          FileUtils.chmod_R 0755, floppy_dir
+          vm.config.floppy = floppy_dir
+          vm.config.add_kernel_cmdline!('ks=floppy')
+          vm.config.add_kernel_cmdline!("repo=#{kickstart.install}")
+          vm.config.reboot = false
+
+          File.write(File.join(floppy_dir, 'ks.cfg'), to_ks_script)
+          Vmit.logger.info "Kickstart: 1st stage."
+          vm.up
+          vm.wait_until_shutdown! do
+            vm.vnc
+          end
+        end
+      ensure
+        vm.config.pop!
+      end
     end
 
     def to_ks_script

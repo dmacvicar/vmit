@@ -18,37 +18,27 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-require File.join(File.dirname(__FILE__), "helper")
-require 'test/unit'
-require 'vmit/workspace'
-require 'tmpdir'
+require 'vmit'
+require 'erb'
+require 'abstract_method'
+require 'confstruct'
 
-class Workspace_test < Test::Unit::TestCase
+module Vmit
 
-  def test_basic
-    Dir.mktmpdir do |dir|
-      workspace = Vmit::Workspace.new(dir)
-      assert_equal '1G', workspace.config.memory
-      assert !File.exist?(File.join(dir, 'config.yml'))
-      assert_raises RuntimeError do
-        workspace.current_image
-      end
+  class UnattendedInstall
 
-      workspace.save_config!
-      assert File.exist?(File.join(dir, 'config.yml'))
+    attr_accessor :config
+    attr_accessor :location
 
-      assert !File.exist?(File.join(dir, 'base.qcow2'))
-      workspace.disk_image_init!
-      STDERR.puts Dir.entries(dir)
-      assert File.exist?(File.join(dir, 'base.qcow2'))
+    #abstract_method :execute_autoinstall
 
-      assert workspace.current_image
-
-      workspace.disk_image_shift!
-      # calling this too fast screws the timestamp
-      sleep(1)
-      workspace.disk_image_shift!
+    def initialize(location)
+      @config = Confstruct::Configuration.new({
+        :packages => []
+      })
+      @location = location
     end
+
   end
 
 end

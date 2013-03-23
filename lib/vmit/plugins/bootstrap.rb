@@ -46,6 +46,24 @@ module Vmit
         disk_size
       end
 
+      option ['-F', '--packages'], "PACKAGES",
+        "Add packages. Either a file with one package name per line or a 
+        comma separated list" do |pkgs|
+        case
+          when File.exist?(pkgs)
+            begin
+              File.read(pkgs).each_line.to_a.map(&:strip)
+            rescue
+            end
+          else
+            list = pkgs.split(',')
+            if list.empty?
+              raise ArgumentError, "Not a valid comma separated list of packages"
+            end
+            list
+        end
+      end
+
       parameter "LOCATION", "Repository URL or ISO image to bootstrap from"
 
       def execute
@@ -60,16 +78,18 @@ module Vmit
         workspace.save_config!
 
         uri = URI.parse(location)
-        bootstrap = [Vmit::Bootstrap::FromImage,
-                  Vmit::Bootstrap::FromMedia].find do |method|
-          method.accept?(uri)
-        end
 
-        if bootstrap
-          bootstrap.new(workspace, uri).execute
-        else
-          raise "Can't bootstrap from #{location}"
-        end
+        Vmit::Bootstrap::InstallMedia.autoinstall_from(location)
+
+        #if method
+        #  bootstrapper = method.new(workspace, uri)
+        #  packages.each do |p|
+        #    bootstrapper.config.add_package!(p)
+        #  end
+         # bootstrapper.execute
+        #else
+        #  raise "Can't bootstrap from #{location}"
+        #end
 
         Vmit.logger.info 'Creating snapshot of fresh system.'
         workspace.disk_snapshot!

@@ -19,6 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 require 'vmit/version'
+require 'vmit/unattended_install'
 require 'vmit/bootstrap'
 require 'vmit/logger'
 require 'vmit/refcounted_resource'
@@ -26,6 +27,9 @@ require 'vmit/network'
 require 'vmit/vfs'
 require 'vmit/workspace'
 require 'vmit/libvirt_vm'
+require 'vmit/autoyast'
+require 'vmit/kickstart'
+require 'vmit/debian_preseed'
 require 'vmit/ext'
 require 'pidfile'
 

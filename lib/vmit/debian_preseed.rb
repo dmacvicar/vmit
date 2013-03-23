@@ -19,12 +19,37 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 require 'erb'
+require 'vmit'
 
 module Vmit
 
   # Some good references here:
   # http://www.hps.com/~tpg/notebook/autoinstall.php
-  class DebianPreseed
+  class DebianPreseed < UnattendedInstall
+
+    def execute_autoinstall(vm, args)
+      vm.config.push!
+      begin
+        vm.config.configure(args)
+        Dir.mktmpdir do |floppy_dir|
+          FileUtils.chmod_R 0755, floppy_dir
+          vm.config.floppy = floppy_dir
+          vm.config.add_kernel_cmdline!('preseed/file=/floppy/preseed.cfg')
+          vm.config.add_kernel_cmdline!('auto=true')
+          vm.config.add_kernel_cmdline!('priority=critical')
+          vm.config.reboot = false
+
+          File.write(File.join(floppy_dir, 'preseed.cfg'), to_txt)
+          Vmit.logger.info "Preseed: 1st stage."
+          vm.up
+          vm.wait_until_shutdown! do
+            vm.vnc
+          end
+        end
+      ensure
+        vm.config.pop!
+      end
+    end
 
     def to_txt
       template = ERB.new <<-EOF

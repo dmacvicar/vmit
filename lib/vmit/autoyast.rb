@@ -19,41 +19,90 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 require 'nokogiri'
+require 'vmit'
 
 module Vmit
 
-  class AutoYaST
+  class AutoYaST < UnattendedInstall
 
-    attr_accessor :patterns
-    attr_accessor :packages
-
-    def initialize
-      @net_udev = {}
+    def initialize(location)
+      super(location)
       base!
     end
 
     def base!
-      @patterns = ['base']
-      @packages = ['zypper', 'openssh']
+      config.add_patterns! 'base'
+      config.add_packages! 'zypper'
+      config.add_packages! 'openssh'
     end
 
     # minimal installation
     # does not work with openSUSE
     def minimal!
-      @patterns << 'Minimal'
-      @packages = ['zypper', 'openssh']
+      config.add_patterns! 'Minimal'
+      config.add_packages! 'zypper'
+      config.add_packages! 'openssh'
     end
 
-    # Map a network device name and make
-    # it persistent
-    #
-    # @param [String] MAC mac address
-    # @param [String] device name
-    def name_network_device(mac, name)
-      if @net_udev.has_key?(mac) or @net_udev.has_value?(mac)
-        raise "Device with MAC #{mac} is already assigned to #{@net_udev[name]}"
+    # @param [Hash] args Arguments for 1st stage
+    def execute_autoinstall(vm, args)
+      vm.config.push!
+      begin
+        vm.config.configure(args)
+        media = Vmit::VFS.from(location)
+        kernel_append_arg = case media
+          when Vmit::VFS::URI then "install=#{location}"
+          when Vmit::VFS::ISO then 'install=cdrom'
+          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+        end
+        vm.config.add_kernel_cmdline!(kernel_append_arg)
+
+        if media.is_a?(Vmit::VFS::ISO)
+          vm.config.cdrom = location.to_s
+        end
+
+        Dir.mktmpdir do |floppy_dir|
+          FileUtils.chmod_R 0775, floppy_dir
+          vm.config.floppy = floppy_dir
+          vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
+          vm.config.reboot = false
+
+          # WTF SLE and openSUSE have different
+          # base pattern names
+          #media.open('/content') do |content_file|
+          #  content_file.each_line do |line|
+          #    case line
+          #      when /^DISTRIBUTION (.+)$/
+          #        case $1
+          #          when /SUSE_SLE/ then autoyast.minimal_sle!
+          #          when /openSUSE/ then autoyast.minimal_opensuse!
+          #        end
+          #    end
+          #  end
+          #end
+
+          File.write(File.join(floppy_dir, 'autoinst.xml'), to_xml)
+          Vmit.logger.info "AutoYaST: 1st stage."
+          puts vm.config.inspect
+          vm.up
+          vm.wait_until_shutdown! do
+            vm.vnc
+          end
+          vm.config.pop!
+
+          Vmit.logger.info "AutoYaST: 2st stage."
+          # 2nd stage
+          vm.config.push!
+          vm.config.configure(:reboot => false)
+          vm.up
+          vm.wait_until_shutdown! do
+            vm.vnc
+          end
+
+        end
+      ensure
+        vm.config.pop!
       end
-      @net_udev[mac] = name
     end
 
     def to_xml
@@ -90,8 +139,13 @@ module Vmit
           }
           xml.software {
             xml.patterns('config:type' => 'list') {
-              @patterns.each do |pat|
+              config.patterns.each do |pat|
                 xml.pattern pat
+              end
+            }
+            xml.packages('config:type' => 'list') {
+              config.packages.each do |pkg|
+                xml.package pkg
               end
             }
           }
