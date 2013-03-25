@@ -46,6 +46,53 @@ module Vmit
       ("%02x"%((rand 64).to_i*4|2))+(0..4).inject(""){|s,x|s+":%02x"%(rand 256).to_i}
     end
 
+    # @returns [Boolean] wether the port is open
+    # @note uses nmap
+    def self.port_open?(host, port)
+      begin
+        # use logger => nil until a sane way of handling
+        # non zero return codes is implemented in cheetah
+        # https://github.com/openSUSE/cheetah/pull/19
+        Cheetah.run(['nmap', host, '-p',
+                      port.to_s, '-sV', '--version-all', '-oG', '-'],
+                    ['grep', '-iq', "#{port}/open"], :logger => nil)
+        true
+      rescue Cheetah::ExecutionFailed
+        false
+      end
+    end
+
+    # Waits unntil that host port is open
+    #
+    # @example
+    #   Vmit::Utils.wait_for_port('192.168.0.1', 22) do
+    #     # do something
+    #   end
+    #
+    #
+    def self.wait_for_port(host, port, &block)
+      chars = %w{ | / - \\ }
+      if block
+        thread = Thread.new(&block)
+        thread.abort_on_exception = true
+      end
+
+      Vmit.logger.info "Waiting for machine port #{port}..."
+      while true
+        print chars[0]
+
+        if port_open?(host, port)
+          Thread.kill(thread) if thread
+          break
+        end
+        break if thread && !thread.alive?
+        sleep(1)
+        print "\b"
+        chars.push chars.shift
+      end
+      puts
+    end
+
     def self.uname(bzimage)
       offset = 0
       File.open(bzimage) do |f|

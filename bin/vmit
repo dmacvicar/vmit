@@ -108,6 +108,7 @@ module Vmit
         Vmit.logger.info("Waiting for ip address...")
       end
       Vmit.logger.info("ip address is #{vm.ip_address}")
+      Vmit::Utils.wait_for_port(vm.ip_address, 22)
       system("ssh root@#{vm.ip_address}")
     end
   end
