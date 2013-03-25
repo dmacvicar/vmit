@@ -2,7 +2,6 @@
 $: << File.join(File.dirname(__FILE__), "..", "lib")
 require 'rubygems'
 require 'active_support/inflector'
-require 'cheetah'
 require 'clamp'
 require 'vmit'
 
@@ -178,6 +177,8 @@ module Vmit
 
   end
 
+  Vmit.load_plugins!
+
   class MainCommand < Clamp::Command
 
     subcommand "init", "Initialize the vm", InitCommand
@@ -195,6 +196,7 @@ module Vmit
 
     # Add commands offered via plugins
     Vmit.plugins.each do |plugin|
+      STDERR.puts plugin
       if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
         plugin_id = plugin.to_s.split('::').last.underscore
         subcommand plugin_id, "Plugin command", plugin

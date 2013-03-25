@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 require 'erb'
-require 'vmit'
+require 'vmit/unattended_install'
 
 module Vmit
 

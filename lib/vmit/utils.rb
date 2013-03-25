@@ -46,6 +46,10 @@ module Vmit
       ("%02x"%((rand 64).to_i*4|2))+(0..4).inject(""){|s,x|s+":%02x"%(rand 256).to_i}
     end
 
+    def self.arch
+      Cheetah.run('arch', :stdout => :capture).strip
+    end
+
     # @returns [Boolean] wether the port is open
     # @note uses nmap
     def self.port_open?(host, port)

@@ -1,7 +1,7 @@
 require 'confstruct'
 require 'libvirt'
 require 'nokogiri'
-require 'vmit'
+require 'vmit/workspace'
 
 module Vmit
 

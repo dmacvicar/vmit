@@ -18,8 +18,6 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-require 'vmit/autoyast'
-require 'vmit/kickstart'
 require 'abstract_method'
 require 'clamp'
 require 'net/http'
@@ -48,12 +46,13 @@ module Vmit
 
       option ['-F', '--packages'], "PACKAGES",
         "Add packages. Either a file with one package name per line or a 
-        comma separated list" do |pkgs|
+        comma separated list", :default => [] do |pkgs|
         case
           when File.exist?(pkgs)
             begin
               File.read(pkgs).each_line.to_a.map(&:strip)
             rescue
+              raise ArgumentError, "Can't read package list from #{pkgs}"
             end
           else
             list = pkgs.split(',')
@@ -77,19 +76,14 @@ module Vmit
         workspace.disk_image_init!(opts)
         workspace.save_config!
 
-        uri = URI.parse(location)
+        install_media = Vmit::InstallMedia.scan(location)
 
-        Vmit::Bootstrap::InstallMedia.autoinstall_from(location)
+        packages.each do |pkg|
+          install_media.unattended_install.config.add_packages!(pkg)
+        end
 
-        #if method
-        #  bootstrapper = method.new(workspace, uri)
-        #  packages.each do |p|
-        #    bootstrapper.config.add_package!(p)
-        #  end
-         # bootstrapper.execute
-        #else
-        #  raise "Can't bootstrap from #{location}"
-        #end
+        vm = Vmit::LibvirtVM.from_pwd
+        install_media.autoinstall(vm)
 
         Vmit.logger.info 'Creating snapshot of fresh system.'
         workspace.disk_snapshot!
