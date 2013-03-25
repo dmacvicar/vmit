@@ -196,7 +196,6 @@ module Vmit
 
     # Add commands offered via plugins
     Vmit.plugins.each do |plugin|
-      STDERR.puts plugin
       if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
         plugin_id = plugin.to_s.split('::').last.underscore
         subcommand plugin_id, "Plugin command", plugin
