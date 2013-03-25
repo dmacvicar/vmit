@@ -159,12 +159,28 @@ module Vmit
       nil
     end
 
+    def spice_address
+      assert_up
+      doc = Nokogiri::XML(domain.xml_desc)
+      port = doc.xpath("//graphics[@type='spice']/@port")
+      listen = doc.xpath("//graphics[@type='spice']/listen[@type='address']/@address")
+      return listen, port
+    end
+
     def vnc_address
       assert_up
       doc = Nokogiri::XML(domain.xml_desc)
       port = doc.xpath("//graphics[@type='vnc']/@port")
       listen = doc.xpath("//graphics[@type='vnc']/listen[@type='address']/@address")
       "#{listen}:#{port}"
+    end
+
+    # synchronus spice viewer
+    def spice
+      assert_up
+      addr, port = spice_address
+      raise "Can't get the SPICE information from the VM" unless addr
+      system("spicec --host #{addr} --port #{port}")
     end
 
     # synchronus vnc viewer
@@ -215,6 +231,10 @@ module Vmit
 
           xml.devices {
             xml.emulator '/usr/bin/qemu-kvm'
+            xml.channel(:type => 'spicevmc') do
+              xml.target(:type => 'virtio', :name => 'com.redhat.spice.0')
+            end
+
             xml.disk(:type => 'file', :device => 'disk') {
               xml.driver(:name => 'qemu', :type => 'qcow2')
               xml.source(:file => workspace.current_image)
@@ -239,6 +259,7 @@ module Vmit
               }
             end
             xml.graphics(:type => 'vnc', :autoport => 'yes')
+            xml.graphics(:type => 'spice', :autoport => 'yes')
             xml.interface(:type => 'network') {
               xml.source(:network => 'default')
               xml.mac(:address => config.mac_address)
