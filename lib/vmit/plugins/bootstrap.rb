@@ -63,7 +63,7 @@ module Vmit
         end
       end
 
-      parameter "LOCATION", "Repository URL or ISO image to bootstrap from"
+      parameter "LOCATION ...", "Repository URL, ISO image or distribution name"
 
       def execute
         Vmit.logger.info 'Starting bootstrap'
@@ -76,7 +76,10 @@ module Vmit
         workspace.disk_image_init!(opts)
         workspace.save_config!
 
+        location = location_list.join(' ')
         install_media = Vmit::InstallMedia.scan(location)
+
+        Vmit.logger.info "Install media: #{install_media}"
 
         packages.each do |pkg|
           install_media.unattended_install.config.add_packages!(pkg)

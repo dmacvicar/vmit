@@ -26,25 +26,33 @@ module Vmit
 
   class Kickstart < UnattendedInstall
 
+    def initialize(location)
+      super(location)
+
+      media = Vmit::VFS.from(location)
+      case media
+        when Vmit::VFS::URI
+          @install = location
+        when Vmit::VFS::ISO
+          @install = :cdrom
+          vm.config.configure(:cdrom => location.to_s)
+        else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+      end
+    end
+
     def execute_autoinstall(vm, args)
       vm.config.push!
       begin
         vm.config.configure(args)
-        media = Vmit::VFS.from(location)
-        case media
-          when Vmit::VFS::URI
-            kickstart.install = location
-          when Vmit::VFS::ISO
-            self.install = :cdrom
-            vm.config.configure(:cdrom => location.to_s)
-          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+        if @install == :cdrom
+          vm.config.configure(:cdrom => location.to_s)
         end
 
         Dir.mktmpdir do |floppy_dir|
           FileUtils.chmod_R 0755, floppy_dir
           vm.config.floppy = floppy_dir
           vm.config.add_kernel_cmdline!('ks=floppy')
-          vm.config.add_kernel_cmdline!("repo=#{kickstart.install}")
+          vm.config.add_kernel_cmdline!("repo=#{@install}")
           vm.config.reboot = false
 
           File.write(File.join(floppy_dir, 'ks.cfg'), to_ks_script)
@@ -69,10 +77,10 @@ keyboard us
 timezone --utc America/New_York
 bootloader --location=mbr --driveorder=sda --append="rhgb quiet"
 install
-<% if install.is_a?(String) || install.is_a?(::URI)%>
-url --url=<%= install.to_s.strip %>
+<% if @install.is_a?(String) || @install.is_a?(::URI)%>
+url --url=<%= @install.to_s.strip %>
 <% else %>
-<%= install %>
+<%= @install %>
 <% end %>
 network --device eth0 --bootproto dhcp
 zerombr yes

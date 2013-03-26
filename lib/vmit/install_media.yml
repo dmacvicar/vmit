@@ -1,0 +1,19 @@
+---
+opensuse:
+  regexp: '^opensuse(\d+\.\d+)$'
+  url: http://download.opensuse.org/distribution/\1/repo/oss/
+  type: suse
+opensusefactory:
+  regexp: '^(opensuse)?factory$'
+  url: http://download.opensuse.org/factory/repo/oss/
+  type: suse
+debian:
+  regexp: '^debian(.+)$'
+  url: http://cdn.debian.net/debian/dists/\1
+  type: debian
+fedora:
+  regexp: '^fedora(\d+)'
+  url: http://mirrors.n-ix.net/fedora/linux/releases/\1/Fedora/$arch/os/
+  type: fedora
+
+

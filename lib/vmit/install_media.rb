@@ -20,6 +20,7 @@
 #
 require 'vmit/utils'
 require 'vmit/vfs'
+require 'confstruct'
 
 module Vmit
 
@@ -34,6 +35,10 @@ module Vmit
       @location = location
     end
 
+    def to_s
+      "#{super.to_s}:#{location}"
+    end
+
     def unattended_install
       unless @unattended_install
         @unattended_install = unattended_install_class.new(location)
@@ -41,17 +46,38 @@ module Vmit
       @unattended_install
     end
 
-    # @return [InstallMedia] scans the install media
-    #   and returns a specific type (suse, debian, etc...)
-    def self.scan(location)
-      media_type = case location.to_s.downcase
+    def self.class_for_media_type(type)
+      case type.to_s.downcase
         when /fedora|redhat|centos/ then FedoraInstallMedia
         when /suse/ then SUSEInstallMedia
         when /debian/ then DebianInstallMedia
         else
           raise "Don't know how to bootstrap media #{location}"
       end
-      media_type.new(location)
+    end
+
+    # @return [InstallMedia] scans the install media
+    #   and returns a specific type (suse, debian, etc...)
+    def self.scan(location)
+      data_file = File.expand_path('install_media.yml', File.dirname(__FILE__))
+      distros = YAML.load(File.read(data_file))
+      distros.each do |key, data|
+        next if not data['type']
+        klass = class_for_media_type(data['type'])
+        if data.has_key?('regexp')
+          regexp = Regexp.new(data['regexp'])
+          replaced_location = location.to_s
+            .downcase.gsub(/[\s_]+/, '')
+          match = regexp.match(replaced_location)
+          next unless match
+          replaced_uri = replaced_location
+            .gsub(regexp, data['url'])
+            .gsub('$arch', Vmit::Utils.arch)
+          return klass.new(replaced_uri) if match
+
+        end
+      end
+      raise ArgumentError.new("Unknown install media '#{location}'")
     end
 
     def autoinstall(vm)
@@ -89,7 +115,7 @@ module Vmit
       '/images/pxeboot/initrd.img'
     end
 
-    def initrd_path
+    def kernel_path
       '/images/pxeboot/vmlinuz'
     end
   end
