@@ -91,7 +91,7 @@ module Vmit
           release = $2
           sp = $4 || '0'
           SUSEInstallMedia.new(
-            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch/"
+            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch/DVD1"
               .gsub('$edition', edition)
               .gsub('$arch', Vmit::Utils.arch)
               .gsub('$release', release)
