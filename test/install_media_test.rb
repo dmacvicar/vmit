@@ -48,6 +48,20 @@ class InstallMedia_test < Test::Unit::TestCase
                    media.location)
     end
 
+    ['sles10sp1', 'sles-10sp1', 'SLES10 SP1', 'SLE10 SP1'].each do |key|
+      media = Vmit::InstallMedia.scan(key)
+      assert_kind_of(Vmit::SUSEInstallMedia, media)
+      assert_equal("http://schnell.suse.de/BY_PRODUCT/sle-server-10-sp1-#{Vmit::Utils.arch}/",
+                   media.location)
+    end
+
+  ['sles11', 'sles-11', 'SLES11', 'SLE11'].each do |key|
+      media = Vmit::InstallMedia.scan(key)
+      assert_kind_of(Vmit::SUSEInstallMedia, media)
+      assert_equal("http://schnell.suse.de/BY_PRODUCT/sle-server-11-sp0-#{Vmit::Utils.arch}/",
+                   media.location)
+    end
+
   end
 
 end

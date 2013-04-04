@@ -58,29 +58,50 @@ module Vmit
 
     # @return [InstallMedia] scans the install media
     #   and returns a specific type (suse, debian, etc...)
-    def self.scan(location)
-      data_file = File.expand_path('install_media.yml', File.dirname(__FILE__))
-      distros = YAML.load(File.read(data_file))
-      distros.each do |key, data|
-        next if not data['type']
-        klass = class_for_media_type(data['type'])
-        if data.has_key?('regexp')
-          regexp = Regexp.new(data['regexp'])
-          replaced_location = location.to_s
-            .downcase.gsub(/[\s_]+/, '')
-          match = regexp.match(replaced_location)
-          next unless match
-          replaced_uri = replaced_location
-            .gsub(regexp, data['url'])
-            .gsub('$arch', Vmit::Utils.arch)
-          return klass.new(replaced_uri) if match
-
-        end
+    def self.scan(key)
+      case key.to_s.downcase.gsub(/[\s_\-]+/, '')
+        when /^opensuse(\d+\.\d+)$/
+          SUSEInstallMedia.new(
+            'http://download.opensuse.org/distribution/$version/repo/oss/'
+              .gsub('$version', $1))
+        when /^(opensuse)?factory$/
+          SUSEInstallMedia.new(
+            'http://download.opensuse.org/factory/repo/oss/')
+        when /^debian(.+)$/
+          DebianInstallMedia.new(
+            'http://cdn.debian.net/debian/dists/$version'
+              .gsub('$version', $1))
+        when /^ubuntu(.+)$/
+          UbuntuInstallMedia.new(
+            'http://archive.ubuntu.com/ubuntu/dists/$version'
+              .gsub('$version', $1))
+        when /^fedora(\d+)/
+          FedoraInstallMedia.new(
+            'http://mirrors.n-ix.net/fedora/linux/releases/$release/Fedora/$arch/os/'
+              .gsub('$arch', Vmit::Utils.arch)
+              .gsub('$release', $1))
+        when /^sle(s|d)?(\d+)(sp(\d+))?$/
+          edition = case $1
+            when 's' then 'sle-server'
+            when 'd' then 'sle-desktop'
+            else
+              Vmit.logger.warn "SLE given. Assuming server."
+              'sle-server'
+          end
+          release = $2
+          sp = $4 || '0'
+          SUSEInstallMedia.new(
+            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch/"
+              .gsub('$edition', edition)
+              .gsub('$arch', Vmit::Utils.arch)
+              .gsub('$release', release)
+              .gsub('$sp', sp))
+        else raise ArgumentError.new("Unknown install media '#{key}'")
       end
-      raise ArgumentError.new("Unknown install media '#{location}'")
     end
 
     def autoinstall(vm)
+      Vmit.logger.debug("Autoinstall from #{location}")
       media = Vmit::VFS.from(location)
       kernel = media.open(kernel_path)
       initrd = media.open(initrd_path)
@@ -122,18 +143,28 @@ module Vmit
 
   class DebianInstallMedia < InstallMedia
 
+    def name
+      'debian'
+    end
+
     def unattended_install_class
       Vmit::DebianPreseed
     end
 
     def initrd_path
       arch = Vmit::Utils.arch.gsub(/x86_64/, 'amd64')
-      "/main/installer-#{arch}/current/images/netboot/debian-installer/#{arch}/initrd.gz"
+      "/main/installer-#{arch}/current/images/netboot/#{name}-installer/#{arch}/initrd.gz"
     end
 
     def kernel_path
       arch = Vmit::Utils.arch.gsub(/x86_64/, 'amd64')
-      "/main/installer-#{arch}/current/images/netboot/debian-installer/#{arch}/linux"
+      "/main/installer-#{arch}/current/images/netboot/#{name}-installer/#{arch}/linux"
+    end
+  end
+
+  class UbuntuInstallMedia < DebianInstallMedia
+    def name
+      'ubuntu'
     end
   end
 
