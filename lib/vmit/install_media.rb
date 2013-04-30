@@ -56,9 +56,12 @@ module Vmit
       end
     end
 
-    # @return [InstallMedia] scans the install media
-    #   and returns a specific type (suse, debian, etc...)
-    def self.scan(key)
+    # @return [InstallMedia] an install media for an arbitrary
+    #   string like 'sles 11 sp2' or 'SLED-11_SP3'
+    #
+    # @raise [ArgumentError] if can't figure out an install media
+    #   from the string
+    def self.alias_to_install_media(key)
       case key.to_s.downcase.gsub(/[\s_\-]+/, '')
         when /^opensuse(\d+\.\d+)$/
           SUSEInstallMedia.new(
@@ -97,6 +100,31 @@ module Vmit
               .gsub('$release', release)
               .gsub('$sp', sp))
         else raise ArgumentError.new("Unknown install media '#{key}'")
+      end
+    end
+
+    # @return [InstallMedia] an install media for a url.
+    #   it accesses the network in order to detect the
+    #   url type.
+    #
+    # @raise [ArgumentError] if can't figure out an install media
+    #   from the string
+    def self.url_to_install_media(url)
+      begin
+        media = Vmit::VFS.from(url)
+        media.open('/content')
+        return SUSEInstallMedia.new(url)
+      rescue
+        raise ArgumentError.new("Don't know the install media '#{url}'")
+      end
+    end
+
+    # @return [InstallMedia] scans the install media
+    #   and returns a specific type (suse, debian, etc...)
+    def self.scan(key)
+      case key
+        when /^http:\/|ftp:\// then url_to_install_media(key)
+        else alias_to_install_media(key)
       end
     end
 
