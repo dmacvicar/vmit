@@ -53,14 +53,20 @@ module Vmit
 
     def to_txt
       template = ERB.new <<-EOF
+d-i debconf/priority select critical
+d-i auto-install/enabled boolean true
 d-i debian-installer/locale string en_US
 d-i console-tools/archs select at
 d-i console-keymaps-at/keymap select American English
+
 d-i debian-installer/keymap string us
+
+d-i netcfg/choose_interface            select auto
 d-i netcfg/get_hostname string unassigned-hostname
 d-i netcfg/get_hostname seen true
 d-i netcfg/get_domain string unassigned-domain
 d-i netcfg/get_domain seen true
+
 d-i mirror/protocol string ftp
 d-i mirror/ftp/hostname string ftp.de.debian.org
 d-i mirror/ftp/directory string /debian/
@@ -76,7 +82,10 @@ d-i clock-setup/utc boolean true
 d-i time/zone string US/Eastern
 d-i clock-setup/ntp boolean true
 popularity-contest popularity-contest/participate boolean false
+
 d-i pkgsel/include string ssh rsync initrd-tools cramfsprogs lzop
+
+d-i passwd/root-login boolean true
 d-i passwd/root-password password linux
 d-i passwd/root-password-again password linux
 d-i passwd/make-user boolean false
