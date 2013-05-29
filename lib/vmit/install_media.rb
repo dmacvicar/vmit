@@ -93,12 +93,27 @@ module Vmit
           end
           release = $2
           sp = $4 || '0'
-          SUSEInstallMedia.new(
-            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch/DVD1"
+          klass = if release.to_i > 9
+            SUSEInstallMedia
+          else
+            SUSE9InstallMedia
+          end
+          suffix = if (release.to_i > 9)
+            '/DVD1'
+          else
+            if (sp.to_i > 0)
+              '/CD1'
+            else
+              ''
+            end
+          end
+          klass.new(
+            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch$topdir"
               .gsub('$edition', edition)
               .gsub('$arch', Vmit::Utils.arch)
               .gsub('$release', release)
-              .gsub('$sp', sp))
+              .gsub('$sp', sp)
+              .gsub('$topdir', suffix))
         else raise ArgumentError.new("Unknown install media '#{key}'")
       end
     end
@@ -151,6 +166,16 @@ module Vmit
 
     def kernel_path
       "/boot/#{Vmit::Utils.arch}/loader/linux"
+    end
+  end
+
+  class SUSE9InstallMedia < SUSEInstallMedia
+    def initrd_path
+      "/boot/loader/initrd"
+    end
+
+    def kernel_path
+      "/boot/loader/linux"
     end
   end
 
