@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.9.2'
   s.add_dependency('clamp')
-  s.add_dependency('open4')
   s.add_dependency('pidfile')
   s.add_dependency('cheetah')
   s.add_dependency('ipaddress')
