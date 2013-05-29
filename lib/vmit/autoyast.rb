@@ -65,7 +65,8 @@ module Vmit
         Dir.mktmpdir do |floppy_dir|
           FileUtils.chmod_R 0775, floppy_dir
           vm.config.floppy = floppy_dir
-          vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
+          #vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
+          vm.config.add_kernel_cmdline!('autoyast=floppy')
           vm.config.reboot = false
 
           # WTF SLE and openSUSE have different
