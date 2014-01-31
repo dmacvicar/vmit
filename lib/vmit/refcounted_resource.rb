@@ -77,7 +77,7 @@ module Vmit
     def self.make_temp
       name = File.basename(Dir::Tmpname.make_tmpname([resource_class, 'tmp'],
                                                      File.join(resource_dir, resource_class)))
-      self.new(name)
+      new(name)
     end
 
     abstract_method :on_up
@@ -100,11 +100,11 @@ module Vmit
           begin
             if f.flock File::LOCK_EX | File::LOCK_NB
               # we are the first ones, bring the resource up
-              self.on_up
+              on_up
             end
 
             if f.flock File::LOCK_SH
-              self.on_acquire
+              on_acquire
             end
 
             yield if block_given?
@@ -113,7 +113,7 @@ module Vmit
             raise e
           ensure
             if f.flock File::LOCK_EX | File::LOCK_NB
-                self.on_down
+                on_down
             end
             on_release
             f.flock File::LOCK_UN

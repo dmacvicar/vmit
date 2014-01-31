@@ -48,12 +48,12 @@ module Vmit
       if not network.active?
         network.create
       end
-      Vmit.logger.debug "\n#{self.to_libvirt_xml}"
+      Vmit.logger.debug "\n#{to_libvirt_xml}"
 
       puts domain.inspect
       domain.destroy if domain
       if domain.nil?
-        conn.create_domain_xml(self.to_libvirt_xml)
+        conn.create_domain_xml(to_libvirt_xml)
       end
     end
 

@@ -40,7 +40,7 @@ module Vmit
     class Handler
       # alias for new
       def self.from(*args)
-        self.new(*args)
+        new(*args)
       end
     end
 
@@ -150,7 +150,7 @@ module Vmit
               when ::URI then location
               else ::URI.parse(location)
               end
-        handler = self.new(uri)
+        handler = new(uri)
         query = Hash[*uri.query.split('&').map {|p| p.split('=')}.flatten]
         unless query.has_key?("path")
           raise ArgumentError.new("#{uri}: missing path in query string")
@@ -193,7 +193,7 @@ module Vmit
       end
 
       def self.open(dir, *rest, &block)
-        self.new(dir).open(name, *rest, &block)
+        new(dir).open(name, *rest, &block)
       end
 
       def open(name, *rest, &block)

@@ -42,7 +42,7 @@ module Vmit
       vm = Vmit::Workspace.new(File.expand_path(Dir.pwd))
 
       OPTION_KEYS.each do |k|
-        val = self.send(k)
+        val = send(k)
         options[k] = val if val
       end
 
@@ -68,7 +68,7 @@ module Vmit
       workspace = Vmit::Workspace.new(File.expand_path(Dir.pwd))
 
       OPTION_KEYS.each do |k|
-        val = self.send(k)
+        val = send(k)
         options[k] = val if val
       end
 
