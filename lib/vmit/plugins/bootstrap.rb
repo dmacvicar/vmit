@@ -37,7 +37,7 @@ module Vmit
     class Bootstrap < ::Clamp::Command
 
       option ["-s","--disk-size"], "SIZE",
-        "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
+             "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
         if not disk_size =~ /(\d)+(M|K|G)/
           raise ArgumentError, "Disk size should be given as 1M, 2G, etc"
         end
@@ -45,8 +45,8 @@ module Vmit
       end
 
       option ['-F', '--packages'], "PACKAGES",
-        "Add packages. Either a file with one package name per line or a 
-        comma separated list", :default => [] do |pkgs|
+             "Add packages. Either a file with one package name per line or a 
+             comma separated list", :default => [] do |pkgs|
         case
           when File.exist?(pkgs)
             begin

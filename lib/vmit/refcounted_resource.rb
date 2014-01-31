@@ -78,7 +78,7 @@ module Vmit
     # @return [RefcountedResource]
     def self.make_temp
       name = File.basename(Dir::Tmpname.make_tmpname([resource_class, 'tmp'],
-        File.join(resource_dir, resource_class)))
+                                                     File.join(resource_dir, resource_class)))
       self.new(name)
     end
 

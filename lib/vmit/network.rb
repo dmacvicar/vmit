@@ -99,7 +99,7 @@ module Vmit
       Cheetah.run '/sbin/ifconfig', @brdevice, @address.network.hosts[0].to_s
       Cheetah.run '/sbin/ifconfig', @brdevice, 'up'
       Cheetah.run 'iptables', '-t', 'nat', '-A', 'POSTROUTING', '-s', @address.network.to_string,
-        '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
+                  '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
 
       start_dnsmasq
     end
@@ -117,7 +117,7 @@ module Vmit
       Cheetah.run '/sbin/ifconfig', @brdevice, 'down'
       Cheetah.run '/sbin/brctl', 'delbr', @brdevice
       Cheetah.run 'iptables', '-t', 'nat', '-D', 'POSTROUTING', '-s', @address.network.to_string,
-        '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
+                  '!', '-d', @address.network.to_string, '-j', 'MASQUERADE'
       kill_dnsmasq
     end
 
