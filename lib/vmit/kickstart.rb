@@ -92,7 +92,7 @@ mc
 
 %end
 EOF
-    template.result(binding)
+      template.result(binding)
     end
   end
 end
