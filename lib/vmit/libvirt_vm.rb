@@ -24,7 +24,7 @@ module Vmit
 
       @conn = ::Libvirt.open("qemu:///system")
       if not @conn
-        raise 'Can\'t initialize hypervisor'
+        fail 'Can\'t initialize hypervisor'
       end
     end
 
@@ -79,13 +79,13 @@ module Vmit
 
     def assert_up
       unless up?
-        raise "VM is not running. Try 'vmit up'..."
+        fail "VM is not running. Try 'vmit up'..."
       end
     end
 
     def assert_down
       if up?
-        raise "VM is running. Try 'vmit down'..."
+        fail "VM is running. Try 'vmit down'..."
       end
     end
 
@@ -176,7 +176,7 @@ module Vmit
     def spice
       assert_up
       addr, port = spice_address
-      raise "Can't get the SPICE information from the VM" unless addr
+      fail "Can't get the SPICE information from the VM" unless addr
       system("spicec --host #{addr} --port #{port}")
     end
 
@@ -184,7 +184,7 @@ module Vmit
     def vnc
       assert_up
       addr = vnc_address
-      raise "Can't get the VNC information from the VM" unless addr
+      fail "Can't get the VNC information from the VM" unless addr
       system("vncviewer #{addr}")
     end
 

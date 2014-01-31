@@ -51,7 +51,7 @@ module Vmit
       when /suse/ then SUSEInstallMedia
       when /debian/ then DebianInstallMedia
       else
-        raise "Don't know how to bootstrap media #{location}"
+        fail "Don't know how to bootstrap media #{location}"
       end
     end
 
@@ -113,7 +113,7 @@ module Vmit
             .gsub('$release', release)
             .gsub('$sp', sp)
             .gsub('$topdir', suffix))
-      else raise ArgumentError.new("Unknown install media '#{key}'")
+      else fail ArgumentError.new("Unknown install media '#{key}'")
       end
     end
 

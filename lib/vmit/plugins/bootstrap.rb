@@ -37,7 +37,7 @@ module Vmit
       option ["-s","--disk-size"], "SIZE",
              "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
         if not disk_size =~ /(\d)+(M|K|G)/
-          raise ArgumentError, "Disk size should be given as 1M, 2G, etc"
+          fail ArgumentError, "Disk size should be given as 1M, 2G, etc"
         end
         disk_size
       end
@@ -55,7 +55,7 @@ module Vmit
         else
           list = pkgs.split(',')
           if list.empty?
-            raise ArgumentError, "Not a valid comma separated list of packages"
+            fail ArgumentError, "Not a valid comma separated list of packages"
           end
           list
         end

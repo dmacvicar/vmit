@@ -34,7 +34,7 @@ module Vmit
           return handler.from(location)
         end
       end
-      raise ArgumentError.new("#{location} not supported")
+      fail ArgumentError.new("#{location} not supported")
     end
 
     class Handler
@@ -71,7 +71,7 @@ module Vmit
               else ::URI.parse(loc.to_s)
               end
         unless accept?(uri)
-          raise ArgumentError.new('Only HTTP/FTP supported')
+          fail ArgumentError.new('Only HTTP/FTP supported')
         end
         @pbar = nil
         @filename = File.basename(uri.path)
@@ -133,7 +133,7 @@ module Vmit
       # Creates a ISO handler for +iso+
       # @param [URI, String] iso ISO file
       def initialize(location, *rest)
-        raise ArgumentError.new(location) unless self.class.accept?(location)
+        fail ArgumentError.new(location) unless self.class.accept?(location)
         path = case location
                when ::URI then location.path
                else ::URI.parse(location).path
@@ -153,7 +153,7 @@ module Vmit
         handler = new(uri)
         query = Hash[*uri.query.split('&').map {|p| p.split('=')}.flatten]
         unless query.has_key?("path")
-          raise ArgumentError.new("#{uri}: missing path in query string")
+          fail ArgumentError.new("#{uri}: missing path in query string")
         end
         handler.open(query["path"])
       end
@@ -163,7 +163,7 @@ module Vmit
       def open(name, *rest)
         index = Cheetah.run('isoinfo', '-f', '-R', '-i', iso_file, :stdout => :capture)
         files = index.each_line.to_a.map(&:strip)
-        raise Errno::ENOENT.new(name) if not files.include?(name)
+        fail Errno::ENOENT.new(name) if not files.include?(name)
         tmp = Tempfile.new('vmit-vfs-iso-')
         Cheetah.run('isoinfo', '-R', '-i', iso_file, '-x', name, :stdout => tmp)
         tmp.close
@@ -188,7 +188,7 @@ module Vmit
         @base_path = base_path
         @base_path ||= '/'
         unless File.exist?(@base_path)
-          raise Errno::ENOENT.new(@base_path)
+          fail Errno::ENOENT.new(@base_path)
         end
       end
 

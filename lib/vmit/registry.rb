@@ -108,7 +108,7 @@ module Vmit
     def []=(key, val)
       if type(key)
         unless val.is_a?(type(key))
-          raise TypeError.new("Expected #{type(key)} for #{key}")
+          fail TypeError.new("Expected #{type(key)} for #{key}")
         end
       end
       @registry[key] = val

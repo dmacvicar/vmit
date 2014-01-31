@@ -138,12 +138,12 @@ module Vmit
     # @returns [String] The latest COW snapshot
     def current_image
       curr = disk_images.last
-      raise "No hard disk image available" if curr.nil?
+      fail "No hard disk image available" if curr.nil?
       curr
     end
 
     def options
-      raise 'Workspace#options is deprecated.'
+      fail 'Workspace#options is deprecated.'
     end
 
     # @return [Hash] Config of the virtual machine

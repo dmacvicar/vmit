@@ -38,7 +38,7 @@ module Vmit
       case config
       when Hash then from_config(config)
       when String then from_alias(config)
-      else raise "Can't build network from #{config}"
+      else fail "Can't build network from #{config}"
       end
     end
 
@@ -49,7 +49,7 @@ module Vmit
         if networks.has_key?(name)
           return from_config(networks[name].symbolize_keys)
         else
-          raise "Unknown network #{name}"
+          fail "Unknown network #{name}"
         end
       end
     end
