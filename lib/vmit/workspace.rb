@@ -107,7 +107,7 @@ module Vmit
       file_name = File.join(work_dir, 'base.qcow2') if images.size == 0
 
       args = ['/usr/bin/qemu-img', 'create',
-        '-f', "qcow2"]
+              '-f', "qcow2"]
 
       if not images.empty?
         args << '-b'

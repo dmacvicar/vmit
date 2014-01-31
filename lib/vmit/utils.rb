@@ -57,7 +57,7 @@ module Vmit
         # non zero return codes is implemented in cheetah
         # https://github.com/openSUSE/cheetah/pull/19
         Cheetah.run(['nmap', host, '-p',
-                      port.to_s, '-sV', '--version-all', '-oG', '-'],
+                     port.to_s, '-sV', '--version-all', '-oG', '-'],
                     ['grep', '-iq', "#{port}/open"], :logger => nil)
         true
       rescue Cheetah::ExecutionFailed
