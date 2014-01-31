@@ -9,7 +9,7 @@ require 'vmit'
 # Don't show by default anything
 #Vmit.logger.level = Logger::INFO
 #Vmit.logger.level = Logger::DEBUG if ENV['DEBUG']
-# TODO find a good format
+# TODO: find a good format
 #Vmit.logger.formatter = proc do |severity, datetime, progname, msg|
 #  "#{datetime}: #{severity} #{msg}\n"
 #end
