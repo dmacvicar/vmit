@@ -110,58 +110,58 @@ module Vmit
     def to_xml
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.profile('xmlns' => 'http://www.suse.com/1.0/yast2ns',
-                    'xmlns:config' => 'http://www.suse.com/1.0/configns') {
-          xml.users('config:type' => 'list') {
-            xml.user {
+                    'xmlns:config' => 'http://www.suse.com/1.0/configns') do
+          xml.users('config:type' => 'list') do
+            xml.user do
               xml.username 'root'
               xml.user_password 'linux'
               xml.encrypted(false,'config:type' => 'boolean')
               xml.forename
               xml.surname
-            }
-          }
-          xml.general {
-            xml.mode {
+            end
+          end
+          xml.general do
+            xml.mode do
               xml.confirm(false, 'config:type' => 'boolean')
               xml.forceboot('config:type' => 'boolean')
               xml.final_reboot(true, 'config:type' => 'boolean')
               xml.second_stage(true, 'config:type' => 'boolean')
-            }
-          }
-          xml.runlevel {
+            end
+          end
+          xml.runlevel do
             xml.default 3
-            xml.services {
-              xml.service {
+            xml.services do
+              xml.service do
                 xml.service_name 'sshd'
                 xml.service_status 'enable'
                 xml.service_start '3 5'
                 xml.service_stop '3 5'
-              }
-            }
-          }
-          xml.software {
-            xml.patterns('config:type' => 'list') {
+              end
+            end
+          end
+          xml.software do
+            xml.patterns('config:type' => 'list') do
               config.patterns.each do |pat|
                 xml.pattern pat
               end
-            }
-            xml.packages('config:type' => 'list') {
+            end
+            xml.packages('config:type' => 'list') do
               config.packages.each do |pkg|
                 xml.package pkg
               end
-            }
-          }
+            end
+          end
           # SLE 11 can do without this basic partitioning but
           # SLE 10 is not that smart.
-          xml.partitioning('config:type' => 'list') {
-            xml.drive {
+          xml.partitioning('config:type' => 'list') do
+            xml.drive do
               xml.use 'all'
-            }
-          }
-          xml.networking {
+            end
+          end
+          xml.networking do
             xml.keep_install_network(true, 'config:type' => 'boolean')
-          }
-        }
+          end
+        end
       end
       builder.to_xml
     end

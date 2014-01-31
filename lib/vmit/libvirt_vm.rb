@@ -201,13 +201,13 @@ module Vmit
 
     def to_libvirt_xml
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.domain(:type => 'kvm') {
+        xml.domain(:type => 'kvm') do
           xml.name workspace.name
           xml.uuid config.uuid
           match = /([0-9+])([^0-9+])/.match config.memory
           xml.memory(match[1], :unit => match[2])
           xml.vcpu 1
-          xml.os {
+          xml.os do
             xml.type('hvm', :arch => 'x86_64')
             if config.lookup!('kernel')
               xml.kernel config.kernel
@@ -217,11 +217,11 @@ module Vmit
             end
             xml.initrd config.initrd if config.lookup!('initrd')
             xml.boot(:dev => 'cdrom') if config.lookup!('cdrom')
-          }
+          end
           # for shutdown to work
-          xml.features {
+          xml.features do
             xml.acpi
-          }
+          end
           #xml.on_poweroff 'destroy'
           unless config.lookup!('reboot').nil? || config.lookup!('reboot')
             xml.on_reboot 'destroy'
@@ -229,13 +229,13 @@ module Vmit
           #xml.on_crash 'destroy'
           #xml.on_lockfailure 'poweroff'
 
-          xml.devices {
+          xml.devices do
             xml.emulator '/usr/bin/qemu-kvm'
             xml.channel(:type => 'spicevmc') do
               xml.target(:type => 'virtio', :name => 'com.redhat.spice.0')
             end
 
-            xml.disk(:type => 'file', :device => 'disk') {
+            xml.disk(:type => 'file', :device => 'disk') do
               xml.driver(:name => 'qemu', :type => 'qcow2')
               xml.source(:file => workspace.current_image)
               if config.virtio
@@ -243,29 +243,29 @@ module Vmit
               else
                 xml.target(:dev => 'sda', :bus => 'ide')
               end
-            }
+            end
             if config.lookup!('cdrom')
-              xml.disk(:type => 'file', :device => 'cdrom') {
+              xml.disk(:type => 'file', :device => 'cdrom') do
                 xml.source(:file => config.cdrom)
                 xml.target(:dev => 'hdc')
                 xml.readonly
-              }
+              end
             end
             if config.lookup!('floppy')
-              xml.disk(:type => 'dir', :device => 'floppy') {
+              xml.disk(:type => 'dir', :device => 'floppy') do
                 xml.source(:dir => config.floppy)
                 xml.target(:dev => 'fda')
                 xml.readonly
-              }
+              end
             end
             xml.graphics(:type => 'vnc', :autoport => 'yes')
             xml.graphics(:type => 'spice', :autoport => 'yes')
-            xml.interface(:type => 'network') {
+            xml.interface(:type => 'network') do
               xml.source(:network => 'default')
               xml.mac(:address => config.mac_address)
-            }
-          }
-        }
+            end
+          end
+        end
       end
       builder.to_xml
     end

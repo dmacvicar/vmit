@@ -79,15 +79,15 @@ module Vmit
         @pbar = nil
         @filename = File.basename(uri.path)
         ret = OpenURI.open_uri(uri.to_s,
-                               :content_length_proc => lambda { |t|
+                               :content_length_proc => lambda do |t|
                                  if t && 0 < t
                                    @pbar = ProgressBar.new(@filename, t)
                                    @pbar.file_transfer_mode
                                  end
-                               },
-                               :progress_proc => lambda { |s|
+                               end,
+                               :progress_proc => lambda do |s|
                                  @pbar.set s if @pbar
-                               }, &block)
+                               end, &block)
         @pbar = nil
         # So that the progress bar line get overwriten
         STDOUT.print "\r"
