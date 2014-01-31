@@ -113,7 +113,7 @@ module Vmit
             raise e
           ensure
             if f.flock File::LOCK_EX | File::LOCK_NB
-                on_down
+              on_down
             end
             on_release
             f.flock File::LOCK_UN
