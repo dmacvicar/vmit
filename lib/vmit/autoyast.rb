@@ -110,7 +110,7 @@ module Vmit
     def to_xml
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.profile('xmlns' => 'http://www.suse.com/1.0/yast2ns',
-          'xmlns:config' => 'http://www.suse.com/1.0/configns') {
+                    'xmlns:config' => 'http://www.suse.com/1.0/configns') {
           xml.users('config:type' => 'list') {
             xml.user {
               xml.username 'root'
