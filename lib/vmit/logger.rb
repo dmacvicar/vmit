@@ -57,7 +57,7 @@ module Vmit
       logger.level = Logger::INFO
       logger.level = Logger::DEBUG if ENV['DEBUG']
       Vmit.logger = logger
-      Cheetah.default_options = {:logger => CheetahLoggerAdapter.new(logger)}
+      Cheetah.default_options = { :logger => CheetahLoggerAdapter.new(logger) }
     end
     @logger
   end

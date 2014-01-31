@@ -147,7 +147,7 @@ module Vmit
       media = Vmit::VFS.from(location)
       kernel = media.open(kernel_path)
       initrd = media.open(initrd_path)
-      opts = {:kernel => kernel.path, :initrd => initrd.path}
+      opts = { :kernel => kernel.path, :initrd => initrd.path }
       unattended_install.execute_autoinstall(vm, opts)
     end
   end

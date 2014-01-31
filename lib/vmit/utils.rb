@@ -41,7 +41,7 @@ module Vmit
   module Utils
     # @return [String] random MAC address
     def self.random_mac_address
-      ("%02x"%((rand 64).to_i*4|2))+(0..4).reduce(""){|s, x|s+":%02x"%(rand 256).to_i}
+      ("%02x" % ((rand 64).to_i * 4 | 2)) + (0..4).reduce("") { |s, x|s + ":%02x" % (rand 256).to_i }
     end
 
     def self.arch
@@ -136,7 +136,7 @@ module Vmit
             already_dl = 0
             response.read_body do |segment|
             already_dl += segment.length
-            if(already_dl != 0)
+            if (already_dl != 0)
               progress.set((already_dl * 100) / dl_size)
             end
             file.write(segment)

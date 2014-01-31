@@ -80,7 +80,7 @@ module Vmit
   #
   class TypedRegistry < Registry
     class << self
-      def type(key, t=nil)
+      def type(key, t = nil)
         @type_info ||= {}
         @type_info[key] = t unless t.nil?
         @type_info[key]

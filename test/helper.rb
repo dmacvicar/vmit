@@ -18,7 +18,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-$: << File.join(File.dirname(__FILE__), "..", "lib")
+$LOAD_PATH << File.join(File.dirname(__FILE__), "..", "lib")
 require 'test/unit'
 require 'vmit'
 

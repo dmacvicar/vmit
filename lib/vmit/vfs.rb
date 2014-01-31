@@ -151,7 +151,7 @@ module Vmit
               else ::URI.parse(location)
               end
         handler = new(uri)
-        query = Hash[*uri.query.split('&').map {|p| p.split('=')}.flatten]
+        query = Hash[*uri.query.split('&').map { |p| p.split('=') }.flatten]
         unless query.has_key?("path")
           fail ArgumentError.new("#{uri}: missing path in query string")
         end
@@ -184,7 +184,7 @@ module Vmit
         File.directory?(location.to_s)
       end
 
-      def initialize(base_path=nil)
+      def initialize(base_path = nil)
         @base_path = base_path
         @base_path ||= '/'
         unless File.exist?(@base_path)

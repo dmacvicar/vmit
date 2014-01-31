@@ -9,7 +9,7 @@ module Vmit
     attr_reader :config
     attr_reader :conn
 
-    def self.from_pwd(opts={})
+    def self.from_pwd(opts = {})
       workspace = Vmit::Workspace.from_pwd
       LibvirtVM.new(workspace, opts)
     end
@@ -17,7 +17,7 @@ module Vmit
     # @param [Vmit::Workspace] workspace to run
     # @param [Hash] runtime options that override
     #   the virtual machine options
-    def initialize(workspace, opts={})
+    def initialize(workspace, opts = {})
       @workspace = workspace
       @config = Confstruct::Configuration.new(@workspace.config)
       @config.configure(opts)

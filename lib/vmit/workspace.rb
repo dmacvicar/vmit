@@ -85,18 +85,18 @@ module Vmit
       disk_image_shift!
     end
 
-    def disk_image_init!(opts={})
+    def disk_image_init!(opts = {})
       disk_image_shift!(opts)
     end
 
-    DISK_INIT_DEFAULTS = {:disk_size => '10G'}
+    DISK_INIT_DEFAULTS = { :disk_size => '10G' }
 
     # Shifts an image, adding a new one using the
     # previous newest one as backing file
     #
     # @param [Hash] opts options for the disk shift
     # @option opts [String] :disk_size Disk size. Only used for image creation
-    def disk_image_shift!(opts={})
+    def disk_image_shift!(opts = {})
       disk_config = Confstruct::Configuration.new(DISK_INIT_DEFAULTS)
 
       file_name = File.join(work_dir, "sda-#{Time.now.to_i}.qcow2")
