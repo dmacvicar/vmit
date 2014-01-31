@@ -39,7 +39,7 @@ class Registry_test < Test::Unit::TestCase
     keys = reg.keys
     assert_equal [], [:memory, :mac_address, :sym_key] - keys
 
-    reg.each do |k,v|
+    reg.each do |k, v|
       assert keys.include?(k)
       assert_equal reg[k], v
     end
@@ -54,7 +54,7 @@ class Registry_test < Test::Unit::TestCase
     keys = reg.keys
     assert_equal [], [:key2, :key4, :key3, :key1] - keys
 
-    reg.each do |k,v|
+    reg.each do |k, v|
       assert keys.include?(k)
       assert_equal reg[k], v
     end

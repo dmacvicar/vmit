@@ -113,7 +113,7 @@ module Vmit
             xml.user do
               xml.username 'root'
               xml.user_password 'linux'
-              xml.encrypted(false,'config:type' => 'boolean')
+              xml.encrypted(false, 'config:type' => 'boolean')
               xml.forename
               xml.surname
             end

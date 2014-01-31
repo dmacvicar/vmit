@@ -75,7 +75,7 @@ module Vmit
 
     # @return [Array,<String>] sorted list of snapshots
     def disk_images
-      Dir.glob(File.join(work_dir, '*.qcow2')).sort do |a,b|
+      Dir.glob(File.join(work_dir, '*.qcow2')).sort do |a, b|
         File.ctime(a) <=> File.ctime(b)
       end
     end

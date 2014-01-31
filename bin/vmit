@@ -29,7 +29,7 @@ module Vmit
   class InitCommand < BaseVmCommand
     OPTION_KEYS = [:disk_size, :memory, :uuid]
 
-    option ["-s","--disk-size"], "SIZE",
+    option ["-s", "--disk-size"], "SIZE",
            "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
       if not disk_size =~ /(\d)+(M|K|G)/
         fail ArgumentError, "Disk size should be given as 1M, 2G, etc"
@@ -56,7 +56,7 @@ module Vmit
   class UpCommand < BaseVmCommand
     OPTION_KEYS = [:memory, :cdrom]
 
-    option ["-cdrom","--cdrom"], "CD", "Use CD as cdrom device (ISO, dev)" do |cdrom|
+    option ["-cdrom", "--cdrom"], "CD", "Use CD as cdrom device (ISO, dev)" do |cdrom|
       if not File.exist?(cdrom)
         fail ArgumentError, "CDROM cdevice #{cdrom} not found"
       end
