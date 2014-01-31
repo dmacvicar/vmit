@@ -39,7 +39,7 @@ module Vmit
   #
   class BufferedRegistry < Registry
     def initialize(registry)
-      @buffer = Hash.new
+      @buffer = {}
       @registry = registry
     end
 
@@ -81,7 +81,7 @@ module Vmit
   class TypedRegistry < Registry
     class << self
       def type(key, t=nil)
-        @type_info ||= Hash.new
+        @type_info ||= {}
         @type_info[key] = t unless t.nil?
         @type_info[key]
       end
