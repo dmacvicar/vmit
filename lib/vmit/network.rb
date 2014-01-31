@@ -38,9 +38,9 @@ module Vmit
 
     def self.create(config)
       case config
-        when Hash then from_config(config)
-        when String then from_alias(config)
-        else raise "Can't build network from #{config}"
+      when Hash then from_config(config)
+      when String then from_alias(config)
+      else raise "Can't build network from #{config}"
       end
     end
 

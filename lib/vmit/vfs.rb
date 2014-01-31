@@ -54,25 +54,25 @@ module Vmit
       # @param uri [URI,String] location
       def self.accept?(location)
         uri = case location
-          when ::URI then location
-          else ::URI.parse(location.to_s)
-        end
+              when ::URI then location
+              else ::URI.parse(location.to_s)
+              end
         ['http', 'ftp'].include?(uri.scheme)
       end
 
       # @param [String] base_url Base location
       def initialize(location)
         @base_uri = case location
-          when ::URI then location
-          else ::URI.parse(location.to_s)
-        end
+                    when ::URI then location
+                    else ::URI.parse(location.to_s)
+                    end
       end
 
       def self.open(loc, *rest, &block)
         uri = case loc
-        when ::URI then loc
-        else ::URI.parse(loc.to_s)
-        end
+              when ::URI then loc
+              else ::URI.parse(loc.to_s)
+              end
         unless accept?(uri)
           raise ArgumentError.new('Only HTTP/FTP supported')
         end
@@ -118,9 +118,9 @@ module Vmit
       # @param uri [URI,String] location
       def self.accept?(location)
         uri = case location
-          when ::URI then location
-          else ::URI.parse(location)
-        end
+              when ::URI then location
+              else ::URI.parse(location)
+              end
 
         # either an iso:// url or a local file
         unless (uri.scheme == 'iso' || uri.scheme.nil?)
@@ -139,9 +139,9 @@ module Vmit
       def initialize(location, *rest)
         raise ArgumentError.new(location) unless self.class.accept?(location)
         path = case location
-          when ::URI then location.path
-          else ::URI.parse(location).path
-        end
+               when ::URI then location.path
+               else ::URI.parse(location).path
+               end
         @iso_file = path
       end
 
@@ -151,9 +151,9 @@ module Vmit
       # @param [URI, String] uri ISO file and path as query string
       def self.open(location)
         uri = case location
-          when ::URI then location
-          else ::URI.parse(location)
-        end
+              when ::URI then location
+              else ::URI.parse(location)
+              end
         handler = self.new(uri)
         query = Hash[*uri.query.split('&').map {|p| p.split('=')}.flatten]
         unless query.has_key?("path")

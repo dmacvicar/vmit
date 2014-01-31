@@ -48,18 +48,18 @@ module Vmit
              "Add packages. Either a file with one package name per line or a 
              comma separated list", :default => [] do |pkgs|
         case
-          when File.exist?(pkgs)
-            begin
-              File.read(pkgs).each_line.to_a.map(&:strip)
-            rescue
-              raise ArgumentError, "Can't read package list from #{pkgs}"
-            end
-          else
-            list = pkgs.split(',')
-            if list.empty?
-              raise ArgumentError, "Not a valid comma separated list of packages"
-            end
-            list
+        when File.exist?(pkgs)
+          begin
+            File.read(pkgs).each_line.to_a.map(&:strip)
+          rescue
+            raise ArgumentError, "Can't read package list from #{pkgs}"
+          end
+        else
+          list = pkgs.split(',')
+          if list.empty?
+            raise ArgumentError, "Not a valid comma separated list of packages"
+          end
+          list
         end
       end
 

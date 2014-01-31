@@ -63,15 +63,15 @@ module Vmit
       assert_up
       st, reason = domain.state
       st_sym = case st
-        when Libvirt::Domain::NOSTATE then :unknown
-        when Libvirt::Domain::RUNNING then :running
-        when Libvirt::Domain::BLOCKED then :blocked
-        when Libvirt::Domain::PAUSED then :paused
-        when Libvirt::Domain::SHUTDOWN then :shutdown
-        when Libvirt::Domain::SHUTOFF then :shutoff
-        when Libvirt::Domain::CRASHED then :crashed
-        when Libvirt::Domain::PMSUSPENDED then :pmsuspended
-      end
+               when Libvirt::Domain::NOSTATE then :unknown
+               when Libvirt::Domain::RUNNING then :running
+               when Libvirt::Domain::BLOCKED then :blocked
+               when Libvirt::Domain::PAUSED then :paused
+               when Libvirt::Domain::SHUTDOWN then :shutdown
+               when Libvirt::Domain::SHUTOFF then :shutoff
+               when Libvirt::Domain::CRASHED then :crashed
+               when Libvirt::Domain::PMSUSPENDED then :pmsuspended
+               end
       return st_sym, reason
     end
 

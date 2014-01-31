@@ -52,10 +52,10 @@ module Vmit
         vm.config.configure(args)
         media = Vmit::VFS.from(location)
         kernel_append_arg = case media
-          when Vmit::VFS::URI then "install=#{location}"
-          when Vmit::VFS::ISO then 'install=cdrom'
-          else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
-        end
+                            when Vmit::VFS::URI then "install=#{location}"
+                            when Vmit::VFS::ISO then 'install=cdrom'
+                            else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+                            end
         vm.config.add_kernel_cmdline!(kernel_append_arg)
 
         if media.is_a?(Vmit::VFS::ISO)

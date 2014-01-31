@@ -36,9 +36,9 @@ require 'pidfile'
 module Vmit
 
   RUN_DIR = case Process.uid
-    when 0 then '/run/vmit'
-    else File.join(Dir::tmpdir, 'vmit')
-  end
+            when 0 then '/run/vmit'
+            else File.join(Dir::tmpdir, 'vmit')
+            end
 
   module Plugins
   end

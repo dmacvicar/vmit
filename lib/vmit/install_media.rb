@@ -48,11 +48,11 @@ module Vmit
 
     def self.class_for_media_type(type)
       case type.to_s.downcase
-        when /fedora|redhat|centos/ then FedoraInstallMedia
-        when /suse/ then SUSEInstallMedia
-        when /debian/ then DebianInstallMedia
-        else
-          raise "Don't know how to bootstrap media #{location}"
+      when /fedora|redhat|centos/ then FedoraInstallMedia
+      when /suse/ then SUSEInstallMedia
+      when /debian/ then DebianInstallMedia
+      else
+        raise "Don't know how to bootstrap media #{location}"
       end
     end
 
@@ -63,58 +63,58 @@ module Vmit
     #   from the string
     def self.alias_to_install_media(key)
       case key.to_s.downcase.gsub(/[\s_\-]+/, '')
-        when /^opensuse(\d+\.\d+)$/
-          SUSEInstallMedia.new(
-            'http://download.opensuse.org/distribution/$version/repo/oss/'
-              .gsub('$version', $1))
-        when /^(opensuse)?factory$/
-          SUSEInstallMedia.new(
-            'http://download.opensuse.org/factory/repo/oss/')
-        when /^debian(.+)$/
-          DebianInstallMedia.new(
-            'http://cdn.debian.net/debian/dists/$version'
-              .gsub('$version', $1))
-        when /^ubuntu(.+)$/
-          UbuntuInstallMedia.new(
-            'http://archive.ubuntu.com/ubuntu/dists/$version'
-              .gsub('$version', $1))
-        when /^fedora(\d+)/
-          FedoraInstallMedia.new(
-            'http://mirrors.n-ix.net/fedora/linux/releases/$release/Fedora/$arch/os/'
-              .gsub('$arch', Vmit::Utils.arch)
-              .gsub('$release', $1))
-        when /^sle(s|d)?(\d+)(sp(\d+))?$/
-          edition = case $1
-            when 's' then 'sle-server'
-            when 'd' then 'sle-desktop'
-            else
-              Vmit.logger.warn "SLE given. Assuming server."
-              'sle-server'
-          end
-          release = $2
-          sp = $4 || '0'
-          klass = if release.to_i > 9
-            SUSEInstallMedia
+      when /^opensuse(\d+\.\d+)$/
+        SUSEInstallMedia.new(
+          'http://download.opensuse.org/distribution/$version/repo/oss/'
+            .gsub('$version', $1))
+      when /^(opensuse)?factory$/
+        SUSEInstallMedia.new(
+          'http://download.opensuse.org/factory/repo/oss/')
+      when /^debian(.+)$/
+        DebianInstallMedia.new(
+          'http://cdn.debian.net/debian/dists/$version'
+            .gsub('$version', $1))
+      when /^ubuntu(.+)$/
+        UbuntuInstallMedia.new(
+          'http://archive.ubuntu.com/ubuntu/dists/$version'
+            .gsub('$version', $1))
+      when /^fedora(\d+)/
+        FedoraInstallMedia.new(
+          'http://mirrors.n-ix.net/fedora/linux/releases/$release/Fedora/$arch/os/'
+            .gsub('$arch', Vmit::Utils.arch)
+            .gsub('$release', $1))
+      when /^sle(s|d)?(\d+)(sp(\d+))?$/
+        edition = case $1
+                  when 's' then 'sle-server'
+                  when 'd' then 'sle-desktop'
+                  else
+                    Vmit.logger.warn "SLE given. Assuming server."
+                    'sle-server'
+                  end
+        release = $2
+        sp = $4 || '0'
+        klass = if release.to_i > 9
+          SUSEInstallMedia
+        else
+          SUSE9InstallMedia
+        end
+        suffix = if (release.to_i > 9)
+          '/DVD1'
+        else
+          if (sp.to_i > 0)
+            '/CD1'
           else
-            SUSE9InstallMedia
+            ''
           end
-          suffix = if (release.to_i > 9)
-            '/DVD1'
-          else
-            if (sp.to_i > 0)
-              '/CD1'
-            else
-              ''
-            end
-          end
-          klass.new(
-            "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch$topdir"
-              .gsub('$edition', edition)
-              .gsub('$arch', Vmit::Utils.arch)
-              .gsub('$release', release)
-              .gsub('$sp', sp)
-              .gsub('$topdir', suffix))
-        else raise ArgumentError.new("Unknown install media '#{key}'")
+        end
+        klass.new(
+          "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch$topdir"
+            .gsub('$edition', edition)
+            .gsub('$arch', Vmit::Utils.arch)
+            .gsub('$release', release)
+            .gsub('$sp', sp)
+            .gsub('$topdir', suffix))
+      else raise ArgumentError.new("Unknown install media '#{key}'")
       end
     end
 
@@ -138,8 +138,8 @@ module Vmit
     #   and returns a specific type (suse, debian, etc...)
     def self.scan(key)
       case key
-        when /^http:\/|ftp:\// then url_to_install_media(key)
-        else alias_to_install_media(key)
+      when /^http:\/|ftp:\// then url_to_install_media(key)
+      else alias_to_install_media(key)
       end
     end
 

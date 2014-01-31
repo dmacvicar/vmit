@@ -31,12 +31,12 @@ module Vmit
 
       media = Vmit::VFS.from(location)
       case media
-        when Vmit::VFS::URI
-          @install = location
-        when Vmit::VFS::ISO
-          @install = :cdrom
-          vm.config.configure(:cdrom => location.to_s)
-        else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
+      when Vmit::VFS::URI
+        @install = location
+      when Vmit::VFS::ISO
+        @install = :cdrom
+        vm.config.configure(:cdrom => location.to_s)
+      else raise ArgumentError.new("Unsupported autoinstallation: #{location}")
       end
     end
 

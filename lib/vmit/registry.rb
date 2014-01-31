@@ -102,10 +102,10 @@ module Vmit
     def [](key)
       rawval = @registry[key]
       case type(key).to_s
-        when 'String' then rawval.to_s
-        when 'Fixnum' then rawval.to_i
-        when 'Float' then rawval.to_f
-        else rawval
+      when 'String' then rawval.to_s
+      when 'Fixnum' then rawval.to_i
+      when 'Float' then rawval.to_f
+      else rawval
       end
     end
 
