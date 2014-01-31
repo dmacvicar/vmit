@@ -66,7 +66,7 @@ module Vmit
     end
 
     def to_ks_script
-template = ERB.new <<-EOF
+      template = ERB.new <<-EOF
 cmdline
 halt
 rootpw linux
