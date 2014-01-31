@@ -189,7 +189,7 @@ module Vmit
     end
 
     def [](key)
-      if @runtime_opts.has_key?(key)
+      if @runtime_opts.key?(key)
         @runtime_opts[key]
       else
         workspace[key]

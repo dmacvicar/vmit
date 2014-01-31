@@ -148,9 +148,7 @@ module Vmit
 
     # @return [Hash] Config of the virtual machine
     #   This is all options plus the defaults
-    def config
-      @config
-    end
+    attr_reader :config
 
     # @return [Hash] config that differs from default
     #  and therefore relevant to be persisted in config.yml

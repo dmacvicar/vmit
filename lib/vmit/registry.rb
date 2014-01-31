@@ -44,7 +44,7 @@ module Vmit
     end
 
     def [](key)
-      if not @buffer.has_key?(key)
+      if not @buffer.key?(key)
         @buffer[key] = @registry[key]
       end
       @buffer[key]
@@ -134,7 +134,7 @@ module Vmit
     def [](key)
       # YAML uses strings for keys
       # we use symbols.
-      if @data.has_key?(key)
+      if @data.key?(key)
         @data[key]
       else
         @data[key.to_s]

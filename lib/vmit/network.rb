@@ -46,7 +46,7 @@ module Vmit
       File.open(File.join(ENV['HOME'], '.vmit', 'networks.yml')) do |f|
         # transform keys into Symbols
         networks = YAML.load(f)
-        if networks.has_key?(name)
+        if networks.key?(name)
           return from_config(networks[name].symbolize_keys)
         else
           fail "Unknown network #{name}"
