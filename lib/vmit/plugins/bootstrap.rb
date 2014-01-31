@@ -43,7 +43,7 @@ module Vmit
       end
 
       option ['-F', '--packages'], 'PACKAGES',
-             "Add packages. Either a file with one package name per line or a 
+             "Add packages. Either a file with one package name per line or a
              comma separated list", :default => [] do |pkgs|
         case
         when File.exist?(pkgs)
