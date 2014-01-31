@@ -18,7 +18,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-require File.join(File.dirname(__FILE__), "helper")
+require File.join(File.dirname(__FILE__), 'helper')
 require 'test/unit'
 require 'vmit/registry'
 require 'tmpdir'
@@ -30,7 +30,7 @@ end
 
 class Registry_test < Test::Unit::TestCase
   def test_basic_yaml
-    dir = File.join(File.dirname(__FILE__), "data/registry.yml")
+    dir = File.join(File.dirname(__FILE__), 'data/registry.yml')
     reg = Vmit::YamlRegistry.new(dir)
 
     assert_equal '2G', reg[:memory]
@@ -46,7 +46,7 @@ class Registry_test < Test::Unit::TestCase
   end
 
   def test_basic_existing_registry
-    dir = File.join(File.dirname(__FILE__), "data/registry")
+    dir = File.join(File.dirname(__FILE__), 'data/registry')
     reg = Vmit::FilesystemRegistry.new(dir)
 
     assert_equal 'val1', reg[:key1]
@@ -66,11 +66,11 @@ class Registry_test < Test::Unit::TestCase
 
       assert_nil reg[:nonexisting_key]
 
-      reg[:hello] = "Hello"
-      reg[:bye] = "Bye"
+      reg[:hello] = 'Hello'
+      reg[:bye] = 'Bye'
 
-      assert_equal "Hello", reg[:hello]
-      assert_equal "Bye", reg[:bye]
+      assert_equal 'Hello', reg[:hello]
+      assert_equal 'Bye', reg[:bye]
     end
   end
 
@@ -79,21 +79,21 @@ class Registry_test < Test::Unit::TestCase
       reg = Vmit::FilesystemRegistry.new(dir)
       breg = Vmit::BufferedRegistry.new(reg)
 
-      reg[:hello] = "Hello"
-      reg[:bye] = "Bye"
+      reg[:hello] = 'Hello'
+      reg[:bye] = 'Bye'
 
-      breg[:bye] = "Bye 2"
+      breg[:bye] = 'Bye 2'
 
-      assert_equal "Bye", reg[:bye]
-      assert_equal "Bye 2", breg[:bye]
+      assert_equal 'Bye', reg[:bye]
+      assert_equal 'Bye 2', breg[:bye]
       breg.save!
-      assert_equal "Bye 2", reg[:bye]
+      assert_equal 'Bye 2', reg[:bye]
 
-      assert_equal "Hello", breg[:hello]
-      reg[:hello] = "Hello 2"
-      assert_equal "Hello", breg[:hello]
+      assert_equal 'Hello', breg[:hello]
+      reg[:hello] = 'Hello 2'
+      assert_equal 'Hello', breg[:hello]
       breg.reload!
-      assert_equal "Hello 2", breg[:hello]
+      assert_equal 'Hello 2', breg[:hello]
     end
   end
 
@@ -102,14 +102,14 @@ class Registry_test < Test::Unit::TestCase
       reg = Vmit::FilesystemRegistry.new(dir)
       treg = MyTypedRegistry.new(reg)
 
-      reg[:key1] = "Hello"
-      reg[:key2] = "1"
+      reg[:key1] = 'Hello'
+      reg[:key2] = '1'
 
-      assert_equal "Hello", treg[:key1]
+      assert_equal 'Hello', treg[:key1]
       assert_equal 1, treg[:key2]
 
       assert_raise TypeError do
-        treg[:key2] = "1"
+        treg[:key2] = '1'
       end
     end
   end

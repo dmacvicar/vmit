@@ -152,10 +152,10 @@ module Vmit
               end
         handler = new(uri)
         query = Hash[*uri.query.split('&').map { |p| p.split('=') }.flatten]
-        unless query.has_key?("path")
+        unless query.has_key?('path')
           fail ArgumentError.new("#{uri}: missing path in query string")
         end
-        handler.open(query["path"])
+        handler.open(query['path'])
       end
 
       # Takes a path relative to +iso_file+

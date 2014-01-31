@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-$LOAD_PATH << File.join(File.dirname(__FILE__), "..", "lib")
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 require 'rubygems'
 require 'active_support/inflector'
 require 'clamp'
@@ -16,23 +16,23 @@ require 'vmit'
 
 module Vmit
   class BaseVmCommand < Clamp::Command
-    option ["-m", "--memory"], "N", "Amount of RAM" do |memory|
+    option ['-m', '--memory'], 'N', 'Amount of RAM' do |memory|
       if not memory =~ /(\d)+(M|K|G)/
-        fail ArgumentError, "Memory should be given as 1M, 2G, etc"
+        fail ArgumentError, 'Memory should be given as 1M, 2G, etc'
       end
       memory
     end
 
-    option ['-u', '--uuid'], "UUID", "unique id for the virtual machine"
+    option ['-u', '--uuid'], 'UUID', 'unique id for the virtual machine'
   end
 
   class InitCommand < BaseVmCommand
     OPTION_KEYS = [:disk_size, :memory, :uuid]
 
-    option ["-s", "--disk-size"], "SIZE",
-           "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
+    option ['-s', '--disk-size'], 'SIZE',
+           'Initialize disk with SIZE (eg: 10M, 10G, 10K)' do |disk_size|
       if not disk_size =~ /(\d)+(M|K|G)/
-        fail ArgumentError, "Disk size should be given as 1M, 2G, etc"
+        fail ArgumentError, 'Disk size should be given as 1M, 2G, etc'
       end
       disk_size
     end
@@ -56,7 +56,7 @@ module Vmit
   class UpCommand < BaseVmCommand
     OPTION_KEYS = [:memory, :cdrom]
 
-    option ["-cdrom", "--cdrom"], "CD", "Use CD as cdrom device (ISO, dev)" do |cdrom|
+    option ['-cdrom', '--cdrom'], 'CD', 'Use CD as cdrom device (ISO, dev)' do |cdrom|
       if not File.exist?(cdrom)
         fail ArgumentError, "CDROM cdevice #{cdrom} not found"
       end
@@ -98,7 +98,7 @@ module Vmit
 
       while not vm.ip_address
         sleep(1)
-        Vmit.logger.info("Waiting for ip address...")
+        Vmit.logger.info('Waiting for ip address...')
       end
       Vmit.logger.info("ip address is #{vm.ip_address}")
       Vmit::Utils.wait_for_port(vm.ip_address, 22)
@@ -167,24 +167,24 @@ module Vmit
   Vmit.load_plugins!
 
   class MainCommand < Clamp::Command
-    subcommand "init", "Initialize the vm", InitCommand
-    subcommand "up", "Run the vm", UpCommand
-    subcommand "status", "Show VM status", StatusCommand
-    subcommand "shutdown", "Shutdown the VM", ShutdownCommand
-    subcommand "reboot", "Reboot the VM", RebootCommand
-    subcommand "destroy", "Destroy the VM", DestroyCommand
-    subcommand "disk-images", "List disk images", DiskImagesCommand
-    subcommand "disk-snapshot", "Creates a new disk-snapshot", DiskSnapshotCommand
-    subcommand "disk-rollback", "Rollbacks to previous disk snapshot", DiskRollbackCommand
-    subcommand "spice", "SPICE into the machine", SpiceCommand
-    subcommand "ssh", "SSH into the machine", SshCommand
-    subcommand "vnc", "VNC into the machine", VncCommand
+    subcommand 'init', 'Initialize the vm', InitCommand
+    subcommand 'up', 'Run the vm', UpCommand
+    subcommand 'status', 'Show VM status', StatusCommand
+    subcommand 'shutdown', 'Shutdown the VM', ShutdownCommand
+    subcommand 'reboot', 'Reboot the VM', RebootCommand
+    subcommand 'destroy', 'Destroy the VM', DestroyCommand
+    subcommand 'disk-images', 'List disk images', DiskImagesCommand
+    subcommand 'disk-snapshot', 'Creates a new disk-snapshot', DiskSnapshotCommand
+    subcommand 'disk-rollback', 'Rollbacks to previous disk snapshot', DiskRollbackCommand
+    subcommand 'spice', 'SPICE into the machine', SpiceCommand
+    subcommand 'ssh', 'SSH into the machine', SshCommand
+    subcommand 'vnc', 'VNC into the machine', VncCommand
 
     # Add commands offered via plugins
     Vmit.plugins.each do |plugin|
       if plugin.is_a?(Class) && plugin.ancestors.include?(::Clamp::Command)
         plugin_id = plugin.to_s.split('::').last.underscore
-        subcommand plugin_id, "Plugin command", plugin
+        subcommand plugin_id, 'Plugin command', plugin
         Vmit.logger.debug "Enabling plugin #{plugin_id}"
       end
     end
@@ -194,7 +194,7 @@ end
 begin
   Vmit::MainCommand.run
 rescue SystemExit, Interrupt
-  Vmit.logger.fatal "interrupted"
+  Vmit.logger.fatal 'interrupted'
   exit(1)
 rescue Exception => e
   Vmit.logger.fatal e.message

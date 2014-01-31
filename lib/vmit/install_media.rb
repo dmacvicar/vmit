@@ -87,7 +87,7 @@ module Vmit
                   when 's' then 'sle-server'
                   when 'd' then 'sle-desktop'
                   else
-                    Vmit.logger.warn "SLE given. Assuming server."
+                    Vmit.logger.warn 'SLE given. Assuming server.'
                     'sle-server'
                   end
         release = $2
@@ -107,7 +107,7 @@ module Vmit
           end
         end
         klass.new(
-          "http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch$topdir"
+          'http://schnell.suse.de/BY_PRODUCT/$edition-$release-sp$sp-$arch$topdir'
             .gsub('$edition', edition)
             .gsub('$arch', Vmit::Utils.arch)
             .gsub('$release', release)
@@ -168,11 +168,11 @@ module Vmit
 
   class SUSE9InstallMedia < SUSEInstallMedia
     def initrd_path
-      "/boot/loader/initrd"
+      '/boot/loader/initrd'
     end
 
     def kernel_path
-      "/boot/loader/linux"
+      '/boot/loader/linux'
     end
   end
 

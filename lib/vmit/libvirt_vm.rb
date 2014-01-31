@@ -22,7 +22,7 @@ module Vmit
       @config = Confstruct::Configuration.new(@workspace.config)
       @config.configure(opts)
 
-      @conn = ::Libvirt.open("qemu:///system")
+      @conn = ::Libvirt.open('qemu:///system')
       if not @conn
         fail 'Can\'t initialize hypervisor'
       end
@@ -41,7 +41,7 @@ module Vmit
       end
 
       Vmit.logger.debug "\n#{conn.capabilities}"
-      Vmit.logger.info "Starting VM..."
+      Vmit.logger.info 'Starting VM...'
 
       network = conn.lookup_network_by_name('default')
       Vmit.logger.debug "\n#{network.xml_desc}"
@@ -127,7 +127,7 @@ module Vmit
       thread = Thread.new(&block)
       thread.abort_on_exception = true
 
-      Vmit.logger.info "Waiting for machine..."
+      Vmit.logger.info 'Waiting for machine...'
       while true
         print chars[0]
 

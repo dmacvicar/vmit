@@ -38,7 +38,7 @@ module Vmit
           vm.config.reboot = false
 
           File.write(File.join(floppy_dir, 'preseed.cfg'), to_txt)
-          Vmit.logger.info "Preseed: 1st stage."
+          Vmit.logger.info 'Preseed: 1st stage.'
           vm.up
           vm.wait_until_shutdown! do
             vm.vnc

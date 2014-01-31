@@ -82,7 +82,7 @@ module Vmit
           #end
 
           File.write(File.join(floppy_dir, 'autoinst.xml'), to_xml)
-          Vmit.logger.info "AutoYaST: 1st stage."
+          Vmit.logger.info 'AutoYaST: 1st stage.'
           puts vm.config.inspect
           vm.up
           vm.wait_until_shutdown! do
@@ -90,7 +90,7 @@ module Vmit
           end
           vm.config.pop!
 
-          Vmit.logger.info "AutoYaST: 2st stage."
+          Vmit.logger.info 'AutoYaST: 2st stage.'
           # 2nd stage
           vm.config.push!
           vm.config.configure(:reboot => false)

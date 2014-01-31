@@ -54,7 +54,7 @@ module Vmit
           vm.config.reboot = false
 
           File.write(File.join(floppy_dir, 'ks.cfg'), to_ks_script)
-          Vmit.logger.info "Kickstart: 1st stage."
+          Vmit.logger.info 'Kickstart: 1st stage.'
           vm.up
           vm.wait_until_shutdown! do
             vm.vnc

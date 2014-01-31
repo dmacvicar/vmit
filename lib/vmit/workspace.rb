@@ -60,7 +60,7 @@ module Vmit
 
     def initialize(work_dir)
       @config = Confstruct::Configuration.new(VM_GLOBAL_DEFAULTS.merge({
-        :uuid => File.read("/proc/sys/kernel/random/uuid").strip,
+        :uuid => File.read('/proc/sys/kernel/random/uuid').strip,
         :mac_address => Vmit::Utils.random_mac_address
         }))
       @work_dir = work_dir
@@ -105,7 +105,7 @@ module Vmit
       file_name = File.join(work_dir, 'base.qcow2') if images.size == 0
 
       args = ['/usr/bin/qemu-img', 'create',
-              '-f', "qcow2"]
+              '-f', 'qcow2']
 
       if not images.empty?
         args << '-b'
@@ -128,7 +128,7 @@ module Vmit
       return if images.empty?
 
       if images.size == 1
-        Vmit.logger.fatal "Only the base snapshot left!"
+        Vmit.logger.fatal 'Only the base snapshot left!'
         return
       end
       Vmit.logger.info "Removing #{images.last}"
@@ -138,7 +138,7 @@ module Vmit
     # @returns [String] The latest COW snapshot
     def current_image
       curr = disk_images.last
-      fail "No hard disk image available" if curr.nil?
+      fail 'No hard disk image available' if curr.nil?
       curr
     end
 
@@ -161,7 +161,7 @@ module Vmit
     # Saves the configuration in config.yml
     def save_config!
       if not relevant_config.empty?
-        Vmit.logger.info "Writing config.yml..."
+        Vmit.logger.info 'Writing config.yml...'
         File.open(config_file, 'w') do |f|
           f.write(relevant_config.to_yaml)
         end

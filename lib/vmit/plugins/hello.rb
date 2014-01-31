@@ -24,7 +24,7 @@ module Vmit
   module Plugins
     class Hello < ::Clamp::Command
       def execute
-        puts "Hello"
+        puts 'Hello'
       end
     end
   end
