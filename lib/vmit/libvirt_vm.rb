@@ -24,7 +24,7 @@ module Vmit
       @config = Confstruct::Configuration.new(@workspace.config)
       @config.configure(opts)
 
-      @conn = ::Libvirt::open("qemu:///system")
+      @conn = ::Libvirt.open("qemu:///system")
       if not @conn
         raise 'Can\'t initialize hypervisor'
       end

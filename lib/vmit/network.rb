@@ -47,7 +47,7 @@ module Vmit
     def self.from_alias(name)
       File.open(File.join(ENV['HOME'], '.vmit', 'networks.yml')) do |f|
         # transform keys into Symbols
-        networks = YAML::load(f)
+        networks = YAML.load(f)
         if networks.has_key?(name)
           return from_config(networks[name].symbolize_keys)
         else

@@ -128,7 +128,7 @@ module Vmit
     end
 
     def reload!
-      @data = YAML::load(File.read(@file_path))
+      @data = YAML.load(File.read(@file_path))
     end
 
     def save!

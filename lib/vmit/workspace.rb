@@ -68,7 +68,7 @@ module Vmit
       @work_dir = work_dir
 
       if File.exist?(config_file)
-        @config.configure(YAML::load(File.open(config_file)))
+        @config.configure(YAML.load(File.open(config_file)))
       end
 
       @network = config.lookup!('network', 'default')
