@@ -15,7 +15,6 @@ require 'vmit'
 #end
 
 module Vmit
-
   class BaseVmCommand < Clamp::Command
     option ["-m", "--memory"], "N", "Amount of RAM" do |memory|
       if not memory =~ /(\d)+(M|K|G)/
@@ -28,7 +27,6 @@ module Vmit
   end
 
   class InitCommand < BaseVmCommand
-
     OPTION_KEYS = [:disk_size, :memory, :uuid]
 
     option ["-s","--disk-size"], "SIZE",
@@ -52,13 +50,10 @@ module Vmit
       vm.save_config!
 
       vm.disk_image_init!(options)
-
     end
-
   end
 
   class UpCommand < BaseVmCommand
-
     OPTION_KEYS = [:memory, :cdrom]
 
     option ["-cdrom","--cdrom"], "CD", "Use CD as cdrom device (ISO, dev)" do |cdrom|
@@ -80,7 +75,6 @@ module Vmit
       vm = Vmit::LibvirtVM.new(workspace, options)
       vm.up
     end
-
   end
 
   class SpiceCommand < Clamp::Command
@@ -121,7 +115,6 @@ module Vmit
       if vm.ip_address
         puts "  #{vm.ip_address}"
       end
-
     end
   end
 
@@ -147,40 +140,33 @@ module Vmit
   end
 
   class DiskSnapshotCommand < Clamp::Command
-
     def execute
       vm = LibvirtVM.from_pwd
       vm.assert_down
 
       vm.workspace.disk_snapshot!
     end
-
   end
 
   class DiskImagesCommand < Clamp::Command
-
     def execute
       vm = LibvirtVM.from_pwd
       puts vm.workspace.disk_images.last
     end
-
   end
 
   class DiskRollbackCommand < Clamp::Command
-
     def execute
       vm = LibvirtVM.from_pwd
       vm.assert_down
 
       vm.workspace.disk_rollback!
     end
-
   end
 
   Vmit.load_plugins!
 
   class MainCommand < Clamp::Command
-
     subcommand "init", "Initialize the vm", InitCommand
     subcommand "up", "Run the vm", UpCommand
     subcommand "status", "Show VM status", StatusCommand
@@ -203,7 +189,6 @@ module Vmit
       end
     end
   end
-
 end
 
 begin

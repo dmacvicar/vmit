@@ -38,7 +38,6 @@ class Hash
 end
 
 module Vmit
-
   module Utils
     # @return [String] random MAC address
     def self.random_mac_address
@@ -148,6 +147,5 @@ module Vmit
         end
       end
     end
-
   end
 end

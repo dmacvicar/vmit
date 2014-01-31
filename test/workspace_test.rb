@@ -24,7 +24,6 @@ require 'vmit/workspace'
 require 'tmpdir'
 
 class Workspace_test < Test::Unit::TestCase
-
   def test_basic
     Dir.mktmpdir do |dir|
       workspace = Vmit::Workspace.new(dir)
@@ -50,5 +49,4 @@ class Workspace_test < Test::Unit::TestCase
       workspace.disk_image_shift!
     end
   end
-
 end

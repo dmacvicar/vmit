@@ -22,11 +22,9 @@ require 'erb'
 require 'vmit/unattended_install'
 
 module Vmit
-
   # Some good references here:
   # http://www.hps.com/~tpg/notebook/autoinstall.php
   class DebianPreseed < UnattendedInstall
-
     def execute_autoinstall(vm, args)
       vm.config.push!
       begin
@@ -93,6 +91,5 @@ d-i grub-installer/only_debian boolean true
 EOF
       return template.result(binding)
     end
-
   end
 end

@@ -21,7 +21,6 @@
 require 'yaml'
 
 module Vmit
-
   class Registry
     include Enumerable
   end
@@ -39,7 +38,6 @@ module Vmit
   #   reg.save! # backing_registry changed
   #
   class BufferedRegistry < Registry
-
     def initialize(registry)
       @buffer = Hash.new
       @registry = registry
@@ -67,7 +65,6 @@ module Vmit
         @buffer[key] = @registry[key]
       end
     end
-
   end
 
   # Add types to keys
@@ -82,7 +79,6 @@ module Vmit
   #   reg = MyTypes.new(backing_registry)
   #
   class TypedRegistry < Registry
-
     class << self
       def type(key, t=nil)
         @type_info ||= Hash.new
@@ -202,7 +198,5 @@ module Vmit
     def keys
       each.to_a.map(&:first)
     end
-
   end
-
 end

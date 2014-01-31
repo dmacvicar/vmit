@@ -26,9 +26,7 @@ require 'progressbar'
 require 'tempfile'
 
 module Vmit
-
   module VFS
-
     # Opens a location
     def self.from(location, *rest, &block)
       [ISO, URI, Local].each do |handler|
@@ -47,7 +45,6 @@ module Vmit
     end
 
     class URI < Handler
-
       # Whether this handler accepts the
       # given location
       #
@@ -109,7 +106,6 @@ module Vmit
     end
 
     class ISO < Handler
-
       attr_reader :iso_file
 
       # Whether this handler accepts the
@@ -180,7 +176,6 @@ module Vmit
     end
 
     class Local < Handler
-
       # Whether this handler accepts the
       # given location
       #
@@ -205,6 +200,5 @@ module Vmit
         Kernel.open(File.join(@base_path, name), *rest, &block)
       end
     end
-
   end
 end

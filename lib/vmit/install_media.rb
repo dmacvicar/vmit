@@ -23,7 +23,6 @@ require 'vmit/vfs'
 require 'confstruct'
 
 module Vmit
-
   class InstallMedia
     abstract_method :unattended_install_class
     abstract_method :kernel_path
@@ -151,11 +150,9 @@ module Vmit
       opts = {:kernel => kernel.path, :initrd => initrd.path}
       unattended_install.execute_autoinstall(vm, opts)
     end
-
   end
 
   class SUSEInstallMedia < InstallMedia
-
     def unattended_install_class
       Vmit::AutoYaST
     end
@@ -180,7 +177,6 @@ module Vmit
   end
 
   class FedoraInstallMedia < InstallMedia
-
     def unattended_install_class
       Vmit::Kickstart
     end
@@ -195,7 +191,6 @@ module Vmit
   end
 
   class DebianInstallMedia < InstallMedia
-
     def name
       'debian'
     end
@@ -220,5 +215,4 @@ module Vmit
       'ubuntu'
     end
   end
-
 end

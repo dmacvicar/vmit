@@ -24,9 +24,7 @@ require 'vmit/install_media'
 require 'tmpdir'
 
 class InstallMedia_test < Test::Unit::TestCase
-
   def test_scan
-
     ['openSUSE 12.1', 'opensuse12.1', 'opensuse_12.1'].each do |key|
       media = Vmit::InstallMedia.scan(key)
       assert_kind_of(Vmit::SUSEInstallMedia, media)
@@ -61,7 +59,5 @@ class InstallMedia_test < Test::Unit::TestCase
       assert_equal("http://schnell.suse.de/BY_PRODUCT/sle-server-11-sp0-#{Vmit::Utils.arch}/",
                    media.location)
     end
-
   end
-
 end

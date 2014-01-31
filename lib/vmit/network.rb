@@ -26,9 +26,7 @@ require 'yaml'
 require 'vmit/refcounted_resource'
 
 module Vmit
-
   class Network < RefcountedResource
-
     abstract_method :connect_interface
     abstract_method :disconnect_interface
 
@@ -69,7 +67,6 @@ module Vmit
   # NAT to the host interface.
   #
   class BridgedNetwork < Network
-
     DEFAULT_NETWORK = '192.168.58.254/24'
 
     def initialize(address)
@@ -155,7 +152,5 @@ module Vmit
     def dnsmasq_pidfile
       File.join(lockfile_dir, 'dnsmasq.pid')
     end
-
   end
-
 end

@@ -24,7 +24,6 @@ require 'webmock/test_unit'
 require 'vmit/vfs'
 
 class VFS_test < Test::Unit::TestCase
-
   def test_http_media
     stub_request(:get, 'www.server.com/foo/file').to_return(:body => 'Test response', :status => 200)
 

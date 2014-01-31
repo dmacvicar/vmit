@@ -22,7 +22,6 @@ require 'abstract_method'
 require 'tmpdir'
 
 module Vmit
-
   # This class allows to bring a resource represented
   # by a shared lock file only once by the
   # the first process using it, and down when the
@@ -46,7 +45,6 @@ module Vmit
   # end
   #
   class RefcountedResource
-
     attr_reader :name
     attr_reader :lockfile_path
     attr_reader :lockfile_dir
@@ -128,7 +126,5 @@ module Vmit
         File.unlink(lockfile_path)
       end
     end
-
   end
-
 end

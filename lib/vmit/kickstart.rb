@@ -23,9 +23,7 @@ require 'vmit/unattended_install'
 require 'vmit/vfs'
 
 module Vmit
-
   class Kickstart < UnattendedInstall
-
     def initialize(location)
       super(location)
 
@@ -96,7 +94,5 @@ mc
 EOF
     template.result(binding)
     end
-
   end
-
 end

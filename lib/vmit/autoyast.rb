@@ -23,9 +23,7 @@ require 'vmit/unattended_install'
 require 'vmit/vfs'
 
 module Vmit
-
   class AutoYaST < UnattendedInstall
-
     def initialize(location)
       super(location)
       base!

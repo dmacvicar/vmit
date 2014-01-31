@@ -22,7 +22,6 @@ require 'logger'
 require 'cheetah'
 
 module Vmit
-
   # remote log service for
   # qemu ifup ifdown scripts
   class LogServer
@@ -62,5 +61,4 @@ module Vmit
     end
     @logger
   end
-
 end

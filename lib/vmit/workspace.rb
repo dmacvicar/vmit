@@ -31,9 +31,7 @@ require 'confstruct/configuration'
 require 'vmit/utils'
 
 module Vmit
-
   class Workspace
-
     attr_accessor :work_dir
 
     VM_GLOBAL_DEFAULTS = {
@@ -175,7 +173,5 @@ module Vmit
     end
 
     BINDIR = File.join(File.dirname(__FILE__), '../../bin')
-
   end
-
 end

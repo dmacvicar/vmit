@@ -21,7 +21,6 @@
 
 module Vmit
   module Ext
-
     module Hash
       def symbolize_keys
         Hash[map{|(k,v)| [k.to_sym,v]}]
@@ -31,7 +30,6 @@ module Vmit
         replace(symbolize_keys)
       end
     end
-
   end
 end
 

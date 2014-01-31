@@ -23,9 +23,7 @@ require 'abstract_method'
 require 'confstruct'
 
 module Vmit
-
   class UnattendedInstall
-
     attr_accessor :config
     attr_accessor :location
 
@@ -37,7 +35,5 @@ module Vmit
       })
       @location = location
     end
-
   end
-
 end

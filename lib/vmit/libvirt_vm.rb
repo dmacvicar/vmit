@@ -4,9 +4,7 @@ require 'nokogiri'
 require 'vmit/workspace'
 
 module Vmit
-
   class LibvirtVM
-
     attr_reader :workspace
     attr_reader :config
     attr_reader :conn
@@ -144,7 +142,6 @@ module Vmit
         print "\b"
         chars.push chars.shift
       end
-
     end
 
     def ip_address
@@ -269,6 +266,5 @@ module Vmit
       end
       builder.to_xml
     end
-
   end
 end

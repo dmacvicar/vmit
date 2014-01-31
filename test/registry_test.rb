@@ -29,7 +29,6 @@ class MyTypedRegistry < Vmit::TypedRegistry
 end
 
 class Registry_test < Test::Unit::TestCase
-
   def test_basic_yaml
     dir = File.join(File.dirname(__FILE__), "data/registry.yml")
     reg = Vmit::YamlRegistry.new(dir)
@@ -114,5 +113,4 @@ class Registry_test < Test::Unit::TestCase
       end
     end
   end
-
 end

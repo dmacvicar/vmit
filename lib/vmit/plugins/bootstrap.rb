@@ -27,7 +27,6 @@ require 'vmit'
 
 module Vmit
   module Plugins
-
     # Bootstrap allows to initialize a virtual machine
     # from (currently) a (SUSE) repository.
     #
@@ -35,7 +34,6 @@ module Vmit
     # the repository.
     #
     class Bootstrap < ::Clamp::Command
-
       option ["-s","--disk-size"], "SIZE",
              "Initialize disk with SIZE (eg: 10M, 10G, 10K)" do |disk_size|
         if not disk_size =~ /(\d)+(M|K|G)/
@@ -92,7 +90,6 @@ module Vmit
         workspace.disk_snapshot!
         Vmit.logger.info 'Bootstraping done. Call vmit run to start your system.'
       end
-
     end
   end
 end

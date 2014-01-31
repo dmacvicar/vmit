@@ -34,7 +34,6 @@ require 'vmit/utils'
 require 'pidfile'
 
 module Vmit
-
   RUN_DIR = case Process.uid
             when 0 then '/run/vmit'
             else File.join(Dir.tmpdir, 'vmit')
@@ -70,5 +69,4 @@ module Vmit
       #puts "Loaded: #{pl_class}"
     end
   end
-
 end
