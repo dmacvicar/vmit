@@ -91,7 +91,7 @@ module Vmit
       File.write("/proc/sys/net/ipv6/conf/#{@brdevice}/disable_ipv6", 1)
       File.write('/proc/sys/net/ipv4/ip_forward', 1)
       Cheetah.run '/sbin/brctl', 'stp', @brdevice, 'on'
-      #Cheetah.run '/sbin/brctl', 'setfd', @brdevice, '0' rescue nil
+      # Cheetah.run '/sbin/brctl', 'setfd', @brdevice, '0' rescue nil
       # setup network and dhcp on bridge
       Cheetah.run '/sbin/ifconfig', @brdevice, @address.network.hosts[0].to_s
       Cheetah.run '/sbin/ifconfig', @brdevice, 'up'
@@ -103,7 +103,7 @@ module Vmit
 
     def connect_interface(device)
       Vmit.logger.info "    Connecting #{device} --> #{@brdevice}"
-      #Vmit::Utils.run_command(*['ovs-vsctl', 'add-port', SWITCH, ARGV[0]])
+      # Vmit::Utils.run_command(*['ovs-vsctl', 'add-port', SWITCH, ARGV[0]])
       Cheetah.run '/sbin/brctl', 'addif', @brdevice, device
     end
 
@@ -121,7 +121,7 @@ module Vmit
     # reimplemented from RefcountedResource
     def disconnect_interface(device)
       Vmit.logger.info "    Disconnecting #{device} -X-> #{@brdevice}"
-      #Vmit::Utils.run_command(*['ovs-vsctl', 'del-port', SWITCH, ARGV[0]])
+      # Vmit::Utils.run_command(*['ovs-vsctl', 'del-port', SWITCH, ARGV[0]])
       Cheetah.run '/sbin/brctl', 'delif', @brdevice, device
     end
 
@@ -137,7 +137,7 @@ module Vmit
       dnsmasq_args = %W(dnsmasq -Z -x #{dnsmasq_pidfile} --strict-order --bind-interfaces --listen-address #{@address.network.hosts[0]} --dhcp-range #{@address.network.hosts[1]},#{@address.network.hosts.last})
       Vmit.logger.debug "dnsmasq arguments: '#{dnsmasq_args.join(' ')}'"
       IO.popen(dnsmasq_args)
-      #Vmit.logger.info "  dnsmasq spawned with pid #{dnsmasq_pid}"
+      # Vmit.logger.info "  dnsmasq spawned with pid #{dnsmasq_pid}"
     end
 
     def kill_dnsmasq

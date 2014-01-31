@@ -27,7 +27,7 @@ module Vmit
     attr_accessor :config
     attr_accessor :location
 
-    #abstract_method :execute_autoinstall
+    # abstract_method :execute_autoinstall
 
     def initialize(location)
       @config = Confstruct::Configuration.new({

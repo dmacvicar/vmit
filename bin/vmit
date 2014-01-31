@@ -5,14 +5,14 @@ require 'active_support/inflector'
 require 'clamp'
 require 'vmit'
 
-#Vmit.logger = Logger.new(STDERR)
+# Vmit.logger = Logger.new(STDERR)
 # Don't show by default anything
-#Vmit.logger.level = Logger::INFO
-#Vmit.logger.level = Logger::DEBUG if ENV['DEBUG']
+# Vmit.logger.level = Logger::INFO
+# Vmit.logger.level = Logger::DEBUG if ENV['DEBUG']
 # TODO: find a good format
-#Vmit.logger.formatter = proc do |severity, datetime, progname, msg|
+# Vmit.logger.formatter = proc do |severity, datetime, progname, msg|
 #  "#{datetime}: #{severity} #{msg}\n"
-#end
+# end
 
 module Vmit
   class BaseVmCommand < Clamp::Command

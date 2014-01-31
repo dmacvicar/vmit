@@ -63,13 +63,13 @@ module Vmit
         Dir.mktmpdir do |floppy_dir|
           FileUtils.chmod_R 0775, floppy_dir
           vm.config.floppy = floppy_dir
-          #vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
+          # vm.config.add_kernel_cmdline!('autoyast=device://fd0/autoinst.xml')
           vm.config.add_kernel_cmdline!('autoyast=floppy')
           vm.config.reboot = false
 
           # WTF SLE and openSUSE have different
           # base pattern names
-          #media.open('/content') do |content_file|
+          # media.open('/content') do |content_file|
           #  content_file.each_line do |line|
           #    case line
           #      when /^DISTRIBUTION (.+)$/
@@ -79,7 +79,7 @@ module Vmit
           #        end
           #    end
           #  end
-          #end
+          # end
 
           File.write(File.join(floppy_dir, 'autoinst.xml'), to_xml)
           Vmit.logger.info 'AutoYaST: 1st stage.'

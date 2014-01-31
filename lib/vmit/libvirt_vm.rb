@@ -219,12 +219,12 @@ module Vmit
           xml.features do
             xml.acpi
           end
-          #xml.on_poweroff 'destroy'
+          # xml.on_poweroff 'destroy'
           unless config.lookup!('reboot').nil? || config.lookup!('reboot')
             xml.on_reboot 'destroy'
           end
-          #xml.on_crash 'destroy'
-          #xml.on_lockfailure 'poweroff'
+          # xml.on_crash 'destroy'
+          # xml.on_lockfailure 'poweroff'
 
           xml.devices do
             xml.emulator '/usr/bin/qemu-kvm'
