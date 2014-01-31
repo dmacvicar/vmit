@@ -97,7 +97,6 @@ EOF
     template.result(binding)
     end
 
-
   end
 
 end
