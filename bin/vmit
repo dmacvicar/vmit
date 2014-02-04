@@ -196,7 +196,7 @@ begin
 rescue SystemExit, Interrupt
   Vmit.logger.fatal 'interrupted'
   exit(1)
-rescue Exception => e
+rescue => e
   Vmit.logger.fatal e.message
   e.backtrace.each do |bt_line|
     Vmit.logger.debug "  #{bt_line}"

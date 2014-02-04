@@ -107,7 +107,7 @@ module Vmit
           end
 
           yield if block_given?
-        rescue Exception => e
+        rescue => e
           Vmit.logger.error e.message
           raise e
         ensure
@@ -118,7 +118,7 @@ module Vmit
           f.flock File::LOCK_UN
         end
       end
-    rescue Exception => e
+    rescue => e
       Vmit.logger.error e.message
       raise e
     ensure
