@@ -96,7 +96,7 @@ module Vmit
       vm = LibvirtVM.from_pwd
       vm.assert_up
 
-      until vm.ip_address do
+      until vm.ip_address
         sleep(1)
         Vmit.logger.info('Waiting for ip address...')
       end
