@@ -169,16 +169,14 @@ module Vmit
     end
 
     def [](key)
-      begin
-        path = File.join(@base_path, key.to_s)
-        unless File.directory?(path)
-          File.read(path)
-        else
-          return FilesystemRegistry.new(File.join(@base_path, path))
-        end
-      rescue Errno::ENOENT
-        nil
+      path = File.join(@base_path, key.to_s)
+      unless File.directory?(path)
+        File.read(path)
+      else
+        return FilesystemRegistry.new(File.join(@base_path, path))
       end
+    rescue Errno::ENOENT
+      nil
     end
 
     def []=(key, val)

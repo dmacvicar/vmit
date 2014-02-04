@@ -51,17 +51,15 @@ module Vmit
     # @returns [Boolean] wether the port is open
     # @note uses nmap
     def self.port_open?(host, port)
-      begin
-        # use logger => nil until a sane way of handling
-        # non zero return codes is implemented in cheetah
-        # https://github.com/openSUSE/cheetah/pull/19
-        Cheetah.run(['nmap', host, '-p',
-                     port.to_s, '-sV', '--version-all', '-oG', '-'],
-                    ['grep', '-iq', "#{port}/open"], :logger => nil)
-        true
-      rescue Cheetah::ExecutionFailed
-        false
-      end
+      # use logger => nil until a sane way of handling
+      # non zero return codes is implemented in cheetah
+      # https://github.com/openSUSE/cheetah/pull/19
+      Cheetah.run(['nmap', host, '-p',
+                   port.to_s, '-sV', '--version-all', '-oG', '-'],
+                  ['grep', '-iq', "#{port}/open"], :logger => nil)
+      true
+    rescue Cheetah::ExecutionFailed
+      false
     end
 
     # Waits unntil that host port is open

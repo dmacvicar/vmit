@@ -94,37 +94,35 @@ module Vmit
     #   will call on_down
     #
     def auto
-      begin
-        Vmit.logger.debug "Using resource lock #{lockfile_path}"
-        File.open(lockfile_path, File::WRONLY | File::CREAT, 0666) do |f|
-          begin
-            if f.flock File::LOCK_EX | File::LOCK_NB
-              # we are the first ones, bring the resource up
-              on_up
-            end
-
-            if f.flock File::LOCK_SH
-              on_acquire
-            end
-
-            yield if block_given?
-          rescue Exception => e
-            Vmit.logger.error e.message
-            raise e
-          ensure
-            if f.flock File::LOCK_EX | File::LOCK_NB
-              on_down
-            end
-            on_release
-            f.flock File::LOCK_UN
+      Vmit.logger.debug "Using resource lock #{lockfile_path}"
+      File.open(lockfile_path, File::WRONLY | File::CREAT, 0666) do |f|
+        begin
+          if f.flock File::LOCK_EX | File::LOCK_NB
+            # we are the first ones, bring the resource up
+            on_up
           end
+
+          if f.flock File::LOCK_SH
+            on_acquire
+          end
+
+          yield if block_given?
+        rescue Exception => e
+          Vmit.logger.error e.message
+          raise e
+        ensure
+          if f.flock File::LOCK_EX | File::LOCK_NB
+            on_down
+          end
+          on_release
+          f.flock File::LOCK_UN
         end
-      rescue Exception => e
-        Vmit.logger.error e.message
-        raise e
-      ensure
-        File.unlink(lockfile_path)
       end
+    rescue Exception => e
+      Vmit.logger.error e.message
+      raise e
+    ensure
+      File.unlink(lockfile_path)
     end
   end
 end

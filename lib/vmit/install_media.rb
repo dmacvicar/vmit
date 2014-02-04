@@ -124,13 +124,11 @@ module Vmit
     # @raise [ArgumentError] if can't figure out an install media
     #   from the string
     def self.url_to_install_media(url)
-      begin
-        media = Vmit::VFS.from(url)
-        media.open('/content')
-        return SUSEInstallMedia.new(url)
-      rescue
-        raise ArgumentError.new("Don't know the install media '#{url}'")
-      end
+      media = Vmit::VFS.from(url)
+      media.open('/content')
+      return SUSEInstallMedia.new(url)
+    rescue
+      raise ArgumentError.new("Don't know the install media '#{url}'")
     end
 
     # @return [InstallMedia] scans the install media
