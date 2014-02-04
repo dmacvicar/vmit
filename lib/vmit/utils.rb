@@ -116,7 +116,7 @@ module Vmit
       File.open(filename) do |file|
         buffer = ''
         # Read the file 512 bytes at a time
-        while not file.eof
+        until file.eof do
           file.read(512, buffer)
           sha1.update(buffer)
         end
