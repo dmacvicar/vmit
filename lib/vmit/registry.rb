@@ -170,10 +170,10 @@ module Vmit
 
     def [](key)
       path = File.join(@base_path, key.to_s)
-      unless File.directory?(path)
-        File.read(path)
+      if File.directory?(path)
+        FilesystemRegistry.new(File.join(@base_path, path))
       else
-        return FilesystemRegistry.new(File.join(@base_path, path))
+        File.read(path)
       end
     rescue Errno::ENOENT
       nil
