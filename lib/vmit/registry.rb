@@ -186,10 +186,11 @@ module Vmit
     end
 
     def each(&block)
+      entries = Dir.entries(@base_path).reject do |elem|
+        ['.', '..'].include?(elem)
+      end
       Enumerator.new do |enum|
-        Dir.entries(@base_path).reject do |elem|
-          ['.', '..'].include?(elem)
-        end.each do |key|
+        entries.each do |key|
           enum.yield key.to_sym, self[key]
         end
       end
