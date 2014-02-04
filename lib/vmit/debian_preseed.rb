@@ -89,7 +89,7 @@ d-i passwd/root-password-again password linux
 d-i passwd/make-user boolean false
 d-i grub-installer/only_debian boolean true
 EOF
-      return template.result(binding)
+      template.result(binding)
     end
   end
 end

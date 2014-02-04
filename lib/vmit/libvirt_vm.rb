@@ -70,7 +70,7 @@ module Vmit
                when Libvirt::Domain::CRASHED then :crashed
                when Libvirt::Domain::PMSUSPENDED then :pmsuspended
                end
-      return st_sym, reason
+      [st_sym, reason]
     end
 
     def up?
@@ -161,7 +161,7 @@ module Vmit
       doc = Nokogiri::XML(domain.xml_desc)
       port = doc.xpath("//graphics[@type='spice']/@port")
       listen = doc.xpath("//graphics[@type='spice']/listen[@type='address']/@address")
-      return listen, port
+      [listen, port]
     end
 
     def vnc_address
