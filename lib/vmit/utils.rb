@@ -80,7 +80,7 @@ module Vmit
       end
 
       Vmit.logger.info "Waiting for machine port #{port}..."
-      while true
+      loop do
         print chars[0]
 
         if port_open?(host, port)

@@ -128,7 +128,7 @@ module Vmit
       thread.abort_on_exception = true
 
       Vmit.logger.info 'Waiting for machine...'
-      while true
+      loop do
         print chars[0]
 
         if down?
