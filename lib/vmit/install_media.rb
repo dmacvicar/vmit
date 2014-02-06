@@ -65,33 +65,33 @@ module Vmit
       when /^opensuse(\d+\.\d+)$/
         SUSEInstallMedia.new(
           'http://download.opensuse.org/distribution/$version/repo/oss/'
-            .gsub('$version', $1))
+            .gsub('$version', Regexp.last_match[1]))
       when /^(opensuse)?factory$/
         SUSEInstallMedia.new(
           'http://download.opensuse.org/factory/repo/oss/')
       when /^debian(.+)$/
         DebianInstallMedia.new(
           'http://cdn.debian.net/debian/dists/$version'
-            .gsub('$version', $1))
+            .gsub('$version', Regexp.last_match[1]))
       when /^ubuntu(.+)$/
         UbuntuInstallMedia.new(
           'http://archive.ubuntu.com/ubuntu/dists/$version'
-            .gsub('$version', $1))
+            .gsub('$version', Regexp.last_match[1]))
       when /^fedora(\d+)/
         FedoraInstallMedia.new(
           'http://mirrors.n-ix.net/fedora/linux/releases/$release/Fedora/$arch/os/'
             .gsub('$arch', Vmit::Utils.arch)
-            .gsub('$release', $1))
+            .gsub('$release', Regexp.last_match[1]))
       when /^sle(s|d)?(\d+)(sp(\d+))?$/
-        edition = case $1
+        edition = case Regexp.last_match[1]
                   when 's' then 'sle-server'
                   when 'd' then 'sle-desktop'
                   else
                     Vmit.logger.warn 'SLE given. Assuming server.'
                     'sle-server'
                   end
-        release = $2
-        sp = $4 || '0'
+        release = Regexp.last_match[2]
+        sp = Regexp.last_match[4] || '0'
         klass = if release.to_i > 9
           SUSEInstallMedia
         else
