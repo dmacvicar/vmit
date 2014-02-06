@@ -134,7 +134,7 @@ module Vmit
             already_dl = 0
             response.read_body do |segment|
               already_dl += segment.length
-              if (already_dl != 0)
+              if already_dl != 0
                 progress.set((already_dl * 100) / dl_size)
               end
               file.write(segment)

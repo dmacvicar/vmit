@@ -119,7 +119,7 @@ module Vmit
               end
 
         # either an iso:// url or a local file
-        unless (uri.scheme == 'iso' || uri.scheme.nil?)
+        unless uri.scheme == 'iso' || uri.scheme.nil?
           return false
         end
         return false unless File.exist?(uri.path)

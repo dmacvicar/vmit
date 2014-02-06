@@ -97,10 +97,10 @@ module Vmit
         else
           SUSE9InstallMedia
         end
-        suffix = if (release.to_i > 9)
+        suffix = if release.to_i > 9
           '/DVD1'
         else
-          if (sp.to_i > 0)
+          if sp.to_i > 0
             '/CD1'
           else
             ''
