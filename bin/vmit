@@ -17,7 +17,7 @@ require 'vmit'
 module Vmit
   class BaseVmCommand < Clamp::Command
     option ['-m', '--memory'], 'N', 'Amount of RAM' do |memory|
-      if not memory =~ /(\d)+(M|K|G)/
+      unless memory =~ /(\d)+(M|K|G)/
         fail ArgumentError, 'Memory should be given as 1M, 2G, etc'
       end
       memory
@@ -31,7 +31,7 @@ module Vmit
 
     option ['-s', '--disk-size'], 'SIZE',
            'Initialize disk with SIZE (eg: 10M, 10G, 10K)' do |disk_size|
-      if not disk_size =~ /(\d)+(M|K|G)/
+      unless disk_size =~ /(\d)+(M|K|G)/
         fail ArgumentError, 'Disk size should be given as 1M, 2G, etc'
       end
       disk_size
@@ -57,7 +57,7 @@ module Vmit
     OPTION_KEYS = [:memory, :cdrom]
 
     option ['-cdrom', '--cdrom'], 'CD', 'Use CD as cdrom device (ISO, dev)' do |cdrom|
-      if not File.exist?(cdrom)
+      if !File.exist?(cdrom)
         fail ArgumentError, "CDROM cdevice #{cdrom} not found"
       end
       cdrom

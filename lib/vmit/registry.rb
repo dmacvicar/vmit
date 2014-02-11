@@ -44,7 +44,7 @@ module Vmit
     end
 
     def [](key)
-      if not @buffer.key?(key)
+      if !@buffer.key?(key)
         @buffer[key] = @registry[key]
       end
       @buffer[key]

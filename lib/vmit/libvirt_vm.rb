@@ -23,7 +23,7 @@ module Vmit
       @config.configure(opts)
 
       @conn = ::Libvirt.open('qemu:///system')
-      if not @conn
+      unless @conn
         fail 'Can\'t initialize hypervisor'
       end
     end
@@ -45,7 +45,7 @@ module Vmit
 
       network = conn.lookup_network_by_name('default')
       Vmit.logger.debug "\n#{network.xml_desc}"
-      if not network.active?
+      unless network.active?
         network.create
       end
       Vmit.logger.debug "\n#{to_libvirt_xml}"
@@ -135,7 +135,7 @@ module Vmit
           Thread.kill(thread)
           return
         end
-        if not thread.alive?
+        unless thread.alive?
           domain.destroy
         end
         sleep(1)

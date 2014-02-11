@@ -36,7 +36,7 @@ module Vmit
     class Bootstrap < ::Clamp::Command
       option ['-s', '--disk-size'], 'SIZE',
              'Initialize disk with SIZE (eg: 10M, 10G, 10K)' do |disk_size|
-        if not disk_size =~ /(\d)+(M|K|G)/
+        if disk_size !~ /(\d)+(M|K|G)/
           fail ArgumentError, 'Disk size should be given as 1M, 2G, etc'
         end
         disk_size

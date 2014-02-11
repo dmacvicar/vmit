@@ -107,7 +107,7 @@ module Vmit
       args = ['/usr/bin/qemu-img', 'create',
               '-f', 'qcow2']
 
-      if not images.empty?
+      if !images.empty?
         args << '-b'
         args << images.last
       end
@@ -158,7 +158,7 @@ module Vmit
 
     # Saves the configuration in config.yml
     def save_config!
-      if not relevant_config.empty?
+      if !relevant_config.empty?
         Vmit.logger.info 'Writing config.yml...'
         File.open(config_file, 'w') do |f|
           f.write(relevant_config.to_yaml)

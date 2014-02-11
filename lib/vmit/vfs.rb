@@ -163,7 +163,9 @@ module Vmit
       def open(name, *rest)
         index = Cheetah.run('isoinfo', '-f', '-R', '-i', iso_file, :stdout => :capture)
         files = index.each_line.to_a.map(&:strip)
-        fail Errno::ENOENT.new(name) if not files.include?(name)
+        unless files.include?(name)
+          fail Errno::ENOENT.new(name)
+        end
         tmp = Tempfile.new('vmit-vfs-iso-')
         Cheetah.run('isoinfo', '-R', '-i', iso_file, '-x', name, :stdout => tmp)
         tmp.close
