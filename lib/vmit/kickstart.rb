@@ -34,7 +34,8 @@ module Vmit
       when Vmit::VFS::ISO
         @install = :cdrom
         vm.config.configure(:cdrom => location.to_s)
-      else fail ArgumentError.new("Unsupported autoinstallation: #{location}")
+      else
+        fail ArgumentError, "Unsupported autoinstallation: #{location}"
       end
     end
 

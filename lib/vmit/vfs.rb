@@ -34,7 +34,7 @@ module Vmit
           return handler.from(location)
         end
       end
-      fail ArgumentError.new("#{location} not supported")
+      fail ArgumentError, "#{location} not supported"
     end
 
     class Handler
@@ -71,7 +71,7 @@ module Vmit
               else ::URI.parse(loc.to_s)
               end
         unless accept?(uri)
-          fail ArgumentError.new('Only HTTP/FTP supported')
+          fail ArgumentError, 'Only HTTP/FTP supported'
         end
         @pbar = nil
         @filename = File.basename(uri.path)
@@ -133,7 +133,9 @@ module Vmit
       # Creates a ISO handler for +iso+
       # @param [URI, String] iso ISO file
       def initialize(location, *rest)
-        fail ArgumentError.new(location) unless self.class.accept?(location)
+        unless self.class.accept?(location)
+          fail ArgumentError, location
+        end
         path = case location
                when ::URI then location.path
                else ::URI.parse(location).path
@@ -153,7 +155,7 @@ module Vmit
         handler = new(uri)
         query = Hash[*uri.query.split('&').map { |p| p.split('=') }.flatten]
         unless query.key?('path')
-          fail ArgumentError.new("#{uri}: missing path in query string")
+          fail ArgumentError, "#{uri}: missing path in query string"
         end
         handler.open(query['path'])
       end
@@ -164,7 +166,7 @@ module Vmit
         index = Cheetah.run('isoinfo', '-f', '-R', '-i', iso_file, :stdout => :capture)
         files = index.each_line.to_a.map(&:strip)
         unless files.include?(name)
-          fail Errno::ENOENT.new(name)
+          fail Errno::ENOENT, name
         end
         tmp = Tempfile.new('vmit-vfs-iso-')
         Cheetah.run('isoinfo', '-R', '-i', iso_file, '-x', name, :stdout => tmp)
@@ -190,7 +192,7 @@ module Vmit
         @base_path = base_path
         @base_path ||= '/'
         unless File.exist?(@base_path)
-          fail Errno::ENOENT.new(@base_path)
+          fail Errno::ENOENT, @base_path
         end
       end
 

@@ -113,7 +113,8 @@ module Vmit
             .gsub('$release', release)
             .gsub('$sp', sp)
             .gsub('$topdir', suffix))
-      else fail ArgumentError.new("Unknown install media '#{key}'")
+      else
+        fail ArgumentError, "Unknown install media '#{key}'"
       end
     end
 
@@ -128,7 +129,7 @@ module Vmit
       media.open('/content')
       return SUSEInstallMedia.new(url)
     rescue
-      raise ArgumentError.new("Don't know the install media '#{url}'")
+      raise ArgumentError, "Don't know the install media '#{url}'"
     end
 
     # @return [InstallMedia] scans the install media
